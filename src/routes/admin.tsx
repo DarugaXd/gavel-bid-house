@@ -4,12 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CATEGORIES, formatRM, formatDateTime } from "@/lib/format";
-import { SETTINGS_KEYS, SETTINGS_LABELS, SETTINGS_MULTILINE, type SettingKey } from "@/lib/site-settings";
+import { SETTINGS_KEYS, SETTINGS_LABELS, SETTINGS_MULTILINE } from "@/lib/site-settings";
 import { toast } from "sonner";
 import {
   Shield, Plus, Trash2, Pencil, Save, X, Play, Pause, StopCircle,
   Radio, ChevronRight, Users2, Building2, Settings as SettingsIcon, Clock,
-  ImagePlus, GripVertical,
+  ImagePlus,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
