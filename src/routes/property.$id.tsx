@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRM, formatDateTime } from "@/lib/format";
+import { ImageCarousel } from "@/components/ImageCarousel";
 import { ArrowLeft, MapPin, Calendar, FileText, Building, Scale, ScrollText, Gavel } from "lucide-react";
 
 export const Route = createFileRoute("/property/$id")({
@@ -38,7 +39,10 @@ function PropertyDetail() {
 
       <div className="mt-6 grid gap-10 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <img src={p.image_url} alt={p.name} className="aspect-[4/3] w-full rounded-lg border border-border object-cover" />
+          <ImageCarousel
+            images={(p.images && p.images.length > 0 ? p.images : [p.image_url]).filter(Boolean)}
+            alt={p.name}
+          />
         </div>
         <div className="lg:col-span-2">
           <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{p.category}</div>

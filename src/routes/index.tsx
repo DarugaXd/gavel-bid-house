@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, type Category, formatRM, formatDateTime } from "@/lib/format";
+import { useSiteSettings, s } from "@/lib/site-settings";
 import { Gavel, MapPin, Calendar, Mail, Phone, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -21,6 +22,7 @@ interface Property {
   category: string;
   reserve_price: number;
   image_url: string;
+  images: string[] | null;
   auction_date: string;
   address: string;
   status: string;
@@ -28,13 +30,14 @@ interface Property {
 
 function HomePage() {
   const [category, setCategory] = useState<Category>("All");
+  const { data: settings } = useSiteSettings();
 
   const { data: properties = [] } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id,name,category,reserve_price,image_url,auction_date,address,status")
+        .select("id,name,category,reserve_price,image_url,images,auction_date,address,status")
         .order("auction_date", { ascending: true });
       if (error) throw error;
       return data as Property[];
@@ -45,7 +48,6 @@ function HomePage() {
     ? properties
     : properties.filter((p) => p.category === category);
 
-  // Upcoming/live: starts within next 2 hours OR has already started
   const now = Date.now();
   const liveSoon = properties.filter((p) => {
     const t = new Date(p.auction_date).getTime();
@@ -60,20 +62,20 @@ function HomePage() {
         <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              <Gavel className="h-3.5 w-3.5" /> Live Property Auctions
+              <Gavel className="h-3.5 w-3.5" /> {s(settings, "hero_eyebrow", "Live Property Auctions")}
             </div>
             <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] text-primary sm:text-6xl md:text-7xl text-balance">
-              Where prestigious properties meet decisive bidders.
+              {s(settings, "hero_title", "Where prestigious properties meet decisive bidders.")}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-              Property Auction House curates Malaysia's most coveted real estate — from heritage bungalows in Damansara Heights to high-rise residences in KLCC — and brings them under the gavel in transparent, real-time auctions.
+            <p className="mt-6 max-w-2xl text-lg text-muted-foreground whitespace-pre-line">
+              {s(settings, "hero_description", "")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#directory" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90">
-                Browse Properties
+                {s(settings, "hero_cta_primary", "Browse Properties")}
               </a>
               <a href="#live" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 font-medium hover:bg-accent">
-                View Live Auctions
+                {s(settings, "hero_cta_secondary", "View Live Auctions")}
               </a>
             </div>
             <dl className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8 max-w-xl">
@@ -89,8 +91,8 @@ function HomePage() {
       <section id="directory" className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Property Directory</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">Find your next lot.</h2>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "directory_eyebrow", "Property Directory")}</p>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "directory_title", "Find your next lot.")}</h2>
           </div>
         </div>
 
@@ -123,9 +125,9 @@ function HomePage() {
       <section id="live" className="border-t border-border bg-secondary/40">
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Starting Soon</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">Upcoming live auctions.</h2>
-            <p className="mt-2 text-muted-foreground">Bid in real time the moment the gavel drops.</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "live_eyebrow", "Starting Soon")}</p>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", "Upcoming live auctions.")}</h2>
+            <p className="mt-2 text-muted-foreground whitespace-pre-line">{s(settings, "live_subtitle", "")}</p>
           </div>
 
           {liveSoon.length === 0 ? (
@@ -145,6 +147,7 @@ function HomePage() {
 }
 
 function ContactSection() {
+  const { data: settings } = useSiteSettings();
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
     queryFn: async () => {
@@ -160,8 +163,8 @@ function ContactSection() {
   return (
     <footer className="border-t border-border bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-20">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">Contact Us</p>
-        <h2 className="mt-2 font-display text-4xl font-bold">Speak with our auction specialists.</h2>
+        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">{s(settings, "contact_eyebrow", "Contact Us")}</p>
+        <h2 className="mt-2 font-display text-4xl font-bold">{s(settings, "contact_title", "Speak with our auction specialists.")}</h2>
 
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           {contacts.map((c) => (
@@ -170,8 +173,8 @@ function ContactSection() {
         </div>
 
         <div className="mt-16 border-t border-primary-foreground/15 pt-6 text-xs text-primary-foreground/60 flex flex-wrap justify-between gap-4">
-          <span>© {new Date().getFullYear()} Property Auction House Sdn Bhd. All rights reserved.</span>
-          <span>Licensed Auctioneers · Kuala Lumpur</span>
+          <span>© {new Date().getFullYear()} {s(settings, "footer_copyright", "Property Auction House Sdn Bhd. All rights reserved.")}</span>
+          <span>{s(settings, "footer_tagline", "Licensed Auctioneers · Kuala Lumpur")}</span>
         </div>
       </div>
     </footer>
@@ -187,6 +190,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   }, [live]);
   const startsIn = new Date(p.auction_date).getTime() - now;
   const started = startsIn <= 0;
+  const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
 
   return (
     <div className="relative">
@@ -213,11 +217,16 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
         </div>
         <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
           <img
-            src={p.image_url}
+            src={cover}
             alt={p.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
+          {p.images && p.images.length > 1 && (
+            <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
+              +{p.images.length - 1}
+            </span>
+          )}
         </div>
       </Link>
       {live && (
