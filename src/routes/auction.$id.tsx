@@ -264,11 +264,11 @@ function AuctionRoom() {
 
               <button
                 onClick={placeBid}
-                disabled={placing || isHighBidder}
+                disabled={placing || isHighBidder || property.is_paused}
                 className="w-full rounded-md bg-primary px-6 py-5 font-display text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg hover:bg-primary/90 disabled:opacity-50"
               >
                 <Gavel className="inline mr-2 h-5 w-5" />
-                {placing ? "Placing…" : `Place Bid · ${formatRM(nextBid)}`}
+                {property.is_paused ? "Paused" : placing ? "Placing…" : `Place Bid · ${formatRM(nextBid)}`}
               </button>
             </>
           )}
