@@ -193,9 +193,12 @@ function AuctionRoom() {
       <div className="mt-6 grid gap-8 lg:grid-cols-5">
         {/* Property image + status */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="relative overflow-hidden rounded-lg border border-border">
-            <img src={property.image_url} alt={property.name} className="aspect-[4/3] w-full object-cover" />
-            <div className="absolute top-4 left-4 flex items-center gap-2">
+          <div className="relative">
+            <ImageCarousel
+              images={(property.images && property.images.length > 0 ? property.images : [property.image_url]).filter(Boolean)}
+              alt={property.name}
+            />
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
               {phase === "live" && (
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-live px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-live-foreground">
                   <span className="h-2 w-2 rounded-full bg-live-foreground animate-pulse" /> LIVE
@@ -226,7 +229,7 @@ function AuctionRoom() {
                   : String(Math.max(0, roundLeftSec)).padStart(2, "0")}
               </div>
               <div className="text-xs text-muted-foreground">
-                {property.is_paused ? "timer is on hold" : "seconds — bid to reset to 30s"}
+                {property.is_paused ? "timer is on hold" : `seconds — bid to reset to ${property.round_seconds || 30}s`}
               </div>
             </div>
           )}
