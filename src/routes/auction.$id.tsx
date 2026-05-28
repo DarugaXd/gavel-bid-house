@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { formatRM, formatDateTime } from "@/lib/format";
+import { ImageCarousel } from "@/components/ImageCarousel";
 import { toast } from "sonner";
 import { ArrowLeft, Users, Gavel, Trophy, Clock } from "lucide-react";
 
@@ -10,20 +11,19 @@ export const Route = createFileRoute("/auction/$id")({
   component: AuctionRoom,
   validateSearch: (s: Record<string, unknown>) => ({ from: (s.from as string) || "card" }),
   beforeLoad: ({ search }) => {
-    // Access control: must arrive via a card click (carries from=card search param).
     if (search.from !== "card" && typeof window !== "undefined" && !window.history.state?.__auctionEntry) {
-      // Soft enforcement; we still render so deep-links from "Enter Live" buttons work.
+      // soft enforcement
     }
   },
 });
 
-const ROUND_SECONDS = 30;
-
 interface Property {
-  id: string; name: string; image_url: string; reserve_price: number; bid_increment: number;
+  id: string; name: string; image_url: string; images: string[] | null;
+  reserve_price: number; bid_increment: number;
   current_bid: number | null; current_bidder: string | null; auction_date: string;
   round_ends_at: string | null; status: string; winner_id: string | null;
   is_paused: boolean; paused_remaining_ms: number | null;
+  round_seconds: number;
 }
 
 function AuctionRoom() {
