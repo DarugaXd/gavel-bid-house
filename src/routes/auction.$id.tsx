@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { formatRM, formatDateTime } from "@/lib/format";
+import { ImageCarousel } from "@/components/ImageCarousel";
 import { toast } from "sonner";
 import { ArrowLeft, Users, Gavel, Trophy, Clock } from "lucide-react";
 
@@ -10,20 +11,19 @@ export const Route = createFileRoute("/auction/$id")({
   component: AuctionRoom,
   validateSearch: (s: Record<string, unknown>) => ({ from: (s.from as string) || "card" }),
   beforeLoad: ({ search }) => {
-    // Access control: must arrive via a card click (carries from=card search param).
     if (search.from !== "card" && typeof window !== "undefined" && !window.history.state?.__auctionEntry) {
-      // Soft enforcement; we still render so deep-links from "Enter Live" buttons work.
+      // soft enforcement
     }
   },
 });
 
-const ROUND_SECONDS = 30;
-
 interface Property {
-  id: string; name: string; image_url: string; reserve_price: number; bid_increment: number;
+  id: string; name: string; image_url: string; images: string[] | null;
+  reserve_price: number; bid_increment: number;
   current_bid: number | null; current_bidder: string | null; auction_date: string;
   round_ends_at: string | null; status: string; winner_id: string | null;
   is_paused: boolean; paused_remaining_ms: number | null;
+  round_seconds: number;
 }
 
 function AuctionRoom() {
@@ -121,7 +121,8 @@ function AuctionRoom() {
     if (property.status === "live") return;
     // First client to notice flips it live
     (async () => {
-      const ends = new Date(Date.now() + ROUND_SECONDS * 1000).toISOString();
+      const secs = property.round_seconds || 30;
+      const ends = new Date(Date.now() + secs * 1000).toISOString();
       await supabase
         .from("properties")
         .update({ status: "live", round_ends_at: ends })
@@ -151,7 +152,8 @@ function AuctionRoom() {
     if (!user || !property) return;
     setPlacing(true);
     const newAmount = Number(property.current_bid ?? property.reserve_price) + Number(property.bid_increment);
-    const newEnds = new Date(Date.now() + ROUND_SECONDS * 1000).toISOString();
+    const secs = property.round_seconds || 30;
+    const newEnds = new Date(Date.now() + secs * 1000).toISOString();
 
     const { error: updErr } = await supabase
       .from("properties")
@@ -191,9 +193,12 @@ function AuctionRoom() {
       <div className="mt-6 grid gap-8 lg:grid-cols-5">
         {/* Property image + status */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="relative overflow-hidden rounded-lg border border-border">
-            <img src={property.image_url} alt={property.name} className="aspect-[4/3] w-full object-cover" />
-            <div className="absolute top-4 left-4 flex items-center gap-2">
+          <div className="relative">
+            <ImageCarousel
+              images={(property.images && property.images.length > 0 ? property.images : [property.image_url]).filter(Boolean)}
+              alt={property.name}
+            />
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
               {phase === "live" && (
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-live px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-live-foreground">
                   <span className="h-2 w-2 rounded-full bg-live-foreground animate-pulse" /> LIVE
@@ -224,7 +229,7 @@ function AuctionRoom() {
                   : String(Math.max(0, roundLeftSec)).padStart(2, "0")}
               </div>
               <div className="text-xs text-muted-foreground">
-                {property.is_paused ? "timer is on hold" : "seconds — bid to reset to 30s"}
+                {property.is_paused ? "timer is on hold" : `seconds — bid to reset to ${property.round_seconds || 30}s`}
               </div>
             </div>
           )}
