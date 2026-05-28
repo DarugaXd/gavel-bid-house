@@ -14,7 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      auction_attendees: {
+        Row: {
+          joined_at: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_attendees_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bids: {
+        Row: {
+          amount: number
+          bidder_id: string
+          created_at: string
+          id: string
+          property_id: string
+        }
+        Insert: {
+          amount: number
+          bidder_id: string
+          created_at?: string
+          id?: string
+          property_id: string
+        }
+        Update: {
+          amount?: number
+          bidder_id?: string
+          created_at?: string
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          ic_number: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          ic_number: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          ic_number?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          auction_date: string
+          auction_location: string
+          bid_increment: number
+          category: Database["public"]["Enums"]["property_category"]
+          conditions: string
+          created_at: string
+          current_bid: number | null
+          current_bidder: string | null
+          id: string
+          image_url: string
+          name: string
+          reserve_price: number
+          round_ends_at: string | null
+          status: string
+          tenure: string
+          title_number: string
+          winner_id: string | null
+        }
+        Insert: {
+          address: string
+          auction_date: string
+          auction_location: string
+          bid_increment?: number
+          category: Database["public"]["Enums"]["property_category"]
+          conditions: string
+          created_at?: string
+          current_bid?: number | null
+          current_bidder?: string | null
+          id?: string
+          image_url: string
+          name: string
+          reserve_price: number
+          round_ends_at?: string | null
+          status?: string
+          tenure: string
+          title_number: string
+          winner_id?: string | null
+        }
+        Update: {
+          address?: string
+          auction_date?: string
+          auction_location?: string
+          bid_increment?: number
+          category?: Database["public"]["Enums"]["property_category"]
+          conditions?: string
+          created_at?: string
+          current_bid?: number | null
+          current_bidder?: string | null
+          id?: string
+          image_url?: string
+          name?: string
+          reserve_price?: number
+          round_ends_at?: string | null
+          status?: string
+          tenure?: string
+          title_number?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +167,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      property_category:
+        | "Terrace"
+        | "Apartment"
+        | "Condominium"
+        | "Bungalow"
+        | "Semi-Detached"
+        | "Shop-Lot"
+        | "Land"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +301,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      property_category: [
+        "Terrace",
+        "Apartment",
+        "Condominium",
+        "Bungalow",
+        "Semi-Detached",
+        "Shop-Lot",
+        "Land",
+      ],
+    },
   },
 } as const
