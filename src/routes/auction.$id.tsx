@@ -121,7 +121,8 @@ function AuctionRoom() {
     if (property.status === "live") return;
     // First client to notice flips it live
     (async () => {
-      const ends = new Date(Date.now() + ROUND_SECONDS * 1000).toISOString();
+      const secs = property.round_seconds || 30;
+      const ends = new Date(Date.now() + secs * 1000).toISOString();
       await supabase
         .from("properties")
         .update({ status: "live", round_ends_at: ends })
@@ -151,7 +152,8 @@ function AuctionRoom() {
     if (!user || !property) return;
     setPlacing(true);
     const newAmount = Number(property.current_bid ?? property.reserve_price) + Number(property.bid_increment);
-    const newEnds = new Date(Date.now() + ROUND_SECONDS * 1000).toISOString();
+    const secs = property.round_seconds || 30;
+    const newEnds = new Date(Date.now() + secs * 1000).toISOString();
 
     const { error: updErr } = await supabase
       .from("properties")
