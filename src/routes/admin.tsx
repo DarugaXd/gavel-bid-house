@@ -350,7 +350,7 @@ function PropertyForm({ property, onClose }: { property?: Property; onClose: () 
     if (!form.name || !form.address) return toast.error("Name and address are required");
     setSaving(true);
     const payload = {
-      name: form.name, category: form.category, reserve_price: Number(form.reserve_price),
+      name: form.name, category: form.category as never, reserve_price: Number(form.reserve_price),
       title_number: form.title_number, tenure: form.tenure, address: form.address,
       auction_location: form.auction_location, conditions: form.conditions,
       auction_date: new Date(form.auction_date).toISOString(),
@@ -358,7 +358,7 @@ function PropertyForm({ property, onClose }: { property?: Property; onClose: () 
     };
     const { error } = isEdit
       ? await supabase.from("properties").update(payload).eq("id", property!.id)
-      : await supabase.from("properties").insert(payload as never);
+      : await supabase.from("properties").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success(isEdit ? "Property updated" : "Property created");
