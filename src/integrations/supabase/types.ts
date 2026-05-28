@@ -142,11 +142,13 @@ export type Database = {
           current_bidder: string | null
           id: string
           image_url: string
+          images: string[]
           is_paused: boolean
           name: string
           paused_remaining_ms: number | null
           reserve_price: number
           round_ends_at: string | null
+          round_seconds: number
           status: string
           tenure: string
           title_number: string
@@ -164,11 +166,13 @@ export type Database = {
           current_bidder?: string | null
           id?: string
           image_url: string
+          images?: string[]
           is_paused?: boolean
           name: string
           paused_remaining_ms?: number | null
           reserve_price: number
           round_ends_at?: string | null
+          round_seconds?: number
           status?: string
           tenure: string
           title_number: string
@@ -186,15 +190,35 @@ export type Database = {
           current_bidder?: string | null
           id?: string
           image_url?: string
+          images?: string[]
           is_paused?: boolean
           name?: string
           paused_remaining_ms?: number | null
           reserve_price?: number
           round_ends_at?: string | null
+          round_seconds?: number
           status?: string
           tenure?: string
           title_number?: string
           winner_id?: string | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
