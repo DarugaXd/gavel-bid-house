@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { Gavel } from "lucide-react";
+import { Gavel, Shield, Eye } from "lucide-react";
 
 import appCss from "../styles.css?url";
 
@@ -62,7 +62,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Property Auction House — Premier Real Estate Auctions" },
-      { name: "description", content: "Discover, bid, and win exclusive properties at Property Auction House. Live auctions across terrace homes, condominiums, bungalows, land and more." },
+      { name: "description", content: "Discover, bid, and win exclusive properties at Property Auction House." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -90,7 +90,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function Header() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin, viewMode, setViewMode } = useAuth();
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -103,17 +103,29 @@ function Header() {
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Est. Trusted Bidding</div>
           </div>
         </Link>
-        <nav className="flex items-center gap-3 text-sm">
+        <nav className="flex items-center gap-2 text-sm">
+          {isAdmin && (
+            <button
+              onClick={() => setViewMode(viewMode === "admin" ? "public" : "admin")}
+              title="Toggle Admin / Public view"
+              className="inline-flex items-center gap-1.5 rounded-md border border-gold bg-gold/10 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-gold/20"
+            >
+              {viewMode === "admin" ? <Shield className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {viewMode === "admin" ? "Admin view" : "Public view"}
+            </button>
+          )}
+          {isAdmin && viewMode === "admin" && (
+            <Link to="/admin" className="rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground hover:bg-primary/90">
+              Dashboard
+            </Link>
+          )}
           {user ? (
-            <>
-              <span className="hidden sm:inline text-muted-foreground">{user.email}</span>
-              <button
-                onClick={() => signOut()}
-                className="rounded-md border border-border bg-card px-4 py-2 font-medium hover:bg-accent"
-              >
-                Sign out
-              </button>
-            </>
+            <button
+              onClick={() => signOut()}
+              className="rounded-md border border-border bg-card px-4 py-2 font-medium hover:bg-accent"
+            >
+              Sign out
+            </button>
           ) : (
             <>
               <Link to="/login" className="rounded-md px-4 py-2 font-medium hover:bg-accent">Log in</Link>

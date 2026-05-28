@@ -139,35 +139,42 @@ function HomePage() {
       </section>
 
       {/* Section D: Contact */}
-      <footer className="border-t border-border bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">Contact Us</p>
-          <h2 className="mt-2 font-display text-4xl font-bold">Speak with our auction specialists.</h2>
-
-          <div className="mt-12 grid gap-8 md:grid-cols-2">
-            <ContactCard
-              name="Datuk Ahmad Razali"
-              title="Head Auctioneer"
-              phone="+60 3-2148 1234"
-              email="ahmad.razali@propertyauctionhouse.my"
-              address="Suite 22-01, Menara KLCC, Jalan Ampang, 50450 Kuala Lumpur"
-            />
-            <ContactCard
-              name="Ms. Sarah Lim"
-              title="Director, Bidder Relations"
-              phone="+60 3-2148 5678"
-              email="sarah.lim@propertyauctionhouse.my"
-              address="Level 18, Menara Maxis, Jalan Ampang, 50088 Kuala Lumpur"
-            />
-          </div>
-
-          <div className="mt-16 border-t border-primary-foreground/15 pt-6 text-xs text-primary-foreground/60 flex flex-wrap justify-between gap-4">
-            <span>© {new Date().getFullYear()} Property Auction House Sdn Bhd. All rights reserved.</span>
-            <span>Licensed Auctioneers · Kuala Lumpur</span>
-          </div>
-        </div>
-      </footer>
+      <ContactSection />
     </main>
+  );
+}
+
+function ContactSection() {
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["contacts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("id,position,name,title,phone,email,address")
+        .order("position", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  return (
+    <footer className="border-t border-border bg-primary text-primary-foreground">
+      <div className="mx-auto max-w-7xl px-6 py-20">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">Contact Us</p>
+        <h2 className="mt-2 font-display text-4xl font-bold">Speak with our auction specialists.</h2>
+
+        <div className="mt-12 grid gap-8 md:grid-cols-2">
+          {contacts.map((c) => (
+            <ContactCard key={c.id} name={c.name} title={c.title} phone={c.phone} email={c.email} address={c.address} />
+          ))}
+        </div>
+
+        <div className="mt-16 border-t border-primary-foreground/15 pt-6 text-xs text-primary-foreground/60 flex flex-wrap justify-between gap-4">
+          <span>© {new Date().getFullYear()} Property Auction House Sdn Bhd. All rights reserved.</span>
+          <span>Licensed Auctioneers · Kuala Lumpur</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 

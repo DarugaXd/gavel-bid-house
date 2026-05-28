@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Gavel } from "lucide-react";
+import { icToAuthEmail, normalizeIc, isValidIc } from "@/lib/ic";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [ic, setIc] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,10 +23,15 @@ function LoginPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!isValidIc(ic)) return toast.error("IC must be exactly 12 digits.");
+    if (!password) return toast.error("Password is required.");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: icToAuthEmail(ic),
+      password,
+    });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Invalid IC number or password.");
     toast.success("Welcome back!");
     navigate({ to: "/" });
   }
@@ -39,11 +45,34 @@ function LoginPage() {
           </div>
         </div>
         <h1 className="text-center font-display text-3xl font-bold text-primary">Welcome back</h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">Sign in to place bids.</p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">Sign in with your IC to place bids.</p>
 
         <form onSubmit={submit} className="mt-8 space-y-4">
-          <Field label="Email" type="email" value={email} onChange={setEmail} required />
-          <Field label="Password" type="password" value={password} onChange={setPassword} required />
+          <label className="block">
+            <span className="block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              New Malaysia IC Number
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={12}
+              value={ic}
+              placeholder="12 digits, no dashes"
+              onChange={(e) => setIc(normalizeIc(e.target.value))}
+              required
+              className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs font-medium uppercase tracking-wider text-muted-foreground">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </label>
           <button
             disabled={loading}
             className="w-full rounded-md bg-primary px-4 py-2.5 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
@@ -57,22 +86,5 @@ function LoginPage() {
         </p>
       </div>
     </main>
-  );
-}
-
-function Field({ label, type, value, onChange, required }: {
-  label: string; type: string; value: string; onChange: (v: string) => void; required?: boolean;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-      />
-    </label>
   );
 }

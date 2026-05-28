@@ -23,6 +23,7 @@ interface Property {
   id: string; name: string; image_url: string; reserve_price: number; bid_increment: number;
   current_bid: number | null; current_bidder: string | null; auction_date: string;
   round_ends_at: string | null; status: string; winner_id: string | null;
+  is_paused: boolean; paused_remaining_ms: number | null;
 }
 
 function AuctionRoom() {
@@ -129,9 +130,10 @@ function AuctionRoom() {
     })();
   }, [phase, countdownMs, property, id]);
 
-  // Auto-close when round timer reaches 0
+  // Auto-close when round timer reaches 0 (skip if paused)
   useEffect(() => {
     if (phase !== "live" || !property) return;
+    if (property.is_paused) return;
     if (!property.round_ends_at) return;
     if (roundLeftMs > 0) return;
     if (closeTriggered.current) return;
@@ -214,12 +216,16 @@ function AuctionRoom() {
           {phase === "live" && (
             <div className="rounded-lg border-2 border-primary/20 bg-card p-6 text-center">
               <div className="flex items-center justify-center gap-2 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" /> Round Closes In
+                <Clock className="h-3.5 w-3.5" /> {property.is_paused ? "Paused by Auctioneer" : "Round Closes In"}
               </div>
-              <div className={"mt-2 font-display text-7xl font-bold tabular-nums " + (roundLeftSec <= 5 ? "text-live" : "text-primary")}>
-                {String(Math.max(0, roundLeftSec)).padStart(2, "0")}
+              <div className={"mt-2 font-display text-7xl font-bold tabular-nums " + (property.is_paused ? "text-muted-foreground" : roundLeftSec <= 5 ? "text-live" : "text-primary")}>
+                {property.is_paused
+                  ? String(Math.max(0, Math.ceil((property.paused_remaining_ms ?? 0) / 1000))).padStart(2, "0")
+                  : String(Math.max(0, roundLeftSec)).padStart(2, "0")}
               </div>
-              <div className="text-xs text-muted-foreground">seconds — bid to reset to 30s</div>
+              <div className="text-xs text-muted-foreground">
+                {property.is_paused ? "timer is on hold" : "seconds — bid to reset to 30s"}
+              </div>
             </div>
           )}
         </div>
@@ -258,11 +264,11 @@ function AuctionRoom() {
 
               <button
                 onClick={placeBid}
-                disabled={placing || isHighBidder}
+                disabled={placing || isHighBidder || property.is_paused}
                 className="w-full rounded-md bg-primary px-6 py-5 font-display text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg hover:bg-primary/90 disabled:opacity-50"
               >
                 <Gavel className="inline mr-2 h-5 w-5" />
-                {placing ? "Placing…" : `Place Bid · ${formatRM(nextBid)}`}
+                {property.is_paused ? "Paused" : placing ? "Placing…" : `Place Bid · ${formatRM(nextBid)}`}
               </button>
             </>
           )}
