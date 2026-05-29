@@ -57,22 +57,6 @@ export function useSiteSettings() {
       const map: SettingsMap = {};
       for (const row of data ?? []) map[row.key] = row.value;
       return map;
-    },
-  });
-
-  // Realtime: live update on save
-  useEffect(() => {
-    const ch = supabase
-      .channel("site-settings-rt")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_settings" },
-        () => qc.invalidateQueries({ queryKey: ["site-settings"] }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
   // Realtime: live update on save
   useEffect(() => {
     const ch = supabase
@@ -87,3 +71,11 @@ export function useSiteSettings() {
       supabase.removeChannel(ch);
     };
   }, [qc]);
+
+  return query;
+}
+
+export function s(map: SettingsMap | undefined, key: SettingKey, fallback = ""): string {
+  return map?.[key] ?? fallback;
+}
+
