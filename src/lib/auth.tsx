@@ -9,6 +9,8 @@ interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  icNumber: string | null;
+  fullName: string | null;
   viewMode: ViewMode;
   setViewMode: (m: ViewMode) => void;
   signOut: () => Promise<void>;
@@ -20,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [icNumber, setIcNumber] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
   const [viewMode, setViewModeState] = useState<ViewMode>("public");
 
   useEffect(() => {
@@ -46,7 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!session?.user) { setIsAdmin(false); return; }
+    if (!session?.user) {
+      setIsAdmin(false);
+      setIcNumber(null);
+      setFullName(null);
+      return;
+    }
     supabase
       .from("user_roles")
       .select("role")
@@ -54,6 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("role", "admin")
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
+
+    supabase
+      .from("profiles")
+      .select("ic_number, full_name")
+      .eq("id", session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setIcNumber(data?.ic_number ?? null);
+        setFullName(data?.full_name ?? null);
+      });
   }, [session?.user?.id]);
 
   return (
@@ -63,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         isAdmin,
+        icNumber,
+        fullName,
         viewMode,
         setViewMode,
         signOut: async () => { await supabase.auth.signOut(); setViewMode("public"); },

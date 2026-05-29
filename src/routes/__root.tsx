@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { useSiteSettings, s } from "@/lib/site-settings";
 import { Gavel, Shield, Eye } from "lucide-react";
 
 import appCss from "../styles.css?url";
@@ -91,15 +92,22 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function Header() {
   const { user, signOut, isAdmin, viewMode, setViewMode } = useAuth();
+  const { data: settings } = useSiteSettings();
+  const companyName = s(settings, "company_name", "Property Auction House");
+  const logoUrl = s(settings, "company_logo_url", "");
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Gavel className="h-5 w-5" />
-          </div>
+          {logoUrl ? (
+            <img src={logoUrl} alt={companyName} className="h-9 w-9 rounded-md object-cover" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Gavel className="h-5 w-5" />
+            </div>
+          )}
           <div className="leading-tight">
-            <div className="font-display text-lg font-bold text-primary">Property Auction House</div>
+            <div className="font-display text-lg font-bold text-primary">{companyName}</div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Est. Trusted Bidding</div>
           </div>
         </Link>
