@@ -57,7 +57,11 @@ export function useSiteSettings() {
       const map: SettingsMap = {};
       for (const row of data ?? []) map[row.key] = row.value;
       return map;
+    },
+  });
+
   // Realtime: live update on save
+
   useEffect(() => {
     const ch = supabase
       .channel(`site-settings-rt-${Math.random().toString(36).slice(2)}`)
