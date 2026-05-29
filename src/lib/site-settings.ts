@@ -73,11 +73,17 @@ export function useSiteSettings() {
     return () => {
       supabase.removeChannel(ch);
     };
+  // Realtime: live update on save
+  useEffect(() => {
+    const ch = supabase
+      .channel(`site-settings-rt-${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_settings" },
+        () => qc.invalidateQueries({ queryKey: ["site-settings"] }),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [qc]);
-
-  return query;
-}
-
-export function s(map: SettingsMap | undefined, key: SettingKey, fallback = ""): string {
-  return map?.[key] ?? fallback;
-}
