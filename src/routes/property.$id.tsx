@@ -1,9 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRM, formatDateTime } from "@/lib/format";
 import { ImageCarousel } from "@/components/ImageCarousel";
-import { ArrowLeft, MapPin, Calendar, FileText, Building, Scale, ScrollText, Gavel } from "lucide-react";
+import { EntryDisclaimerModal } from "@/components/EntryDisclaimerModal";
+import {
+  ArrowLeft, MapPin, Calendar, FileText, Building, Scale, ScrollText, Gavel, Download,
+} from "lucide-react";
 
 export const Route = createFileRoute("/property/$id")({
   component: PropertyDetail,
@@ -12,6 +16,7 @@ export const Route = createFileRoute("/property/$id")({
 function PropertyDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data: p, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -56,7 +61,7 @@ function PropertyDetail() {
 
           {liveSoon && (
             <button
-              onClick={() => navigate({ to: "/auction/$id", params: { id: p.id } })}
+              onClick={() => setModalOpen(true)}
               className="mt-4 w-full rounded-md bg-live px-6 py-3.5 font-semibold uppercase tracking-wider text-live-foreground shadow-md hover:opacity-95"
             >
               <Gavel className="inline mr-2 h-4 w-4" /> Enter Live Auction Room
@@ -80,7 +85,48 @@ function PropertyDetail() {
         </div>
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">{p.conditions}</p>
       </div>
+
+      {/* Legal documents */}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <DocBtn
+          label="Download Proclamation of Sale"
+          url={p.proclamation_pdf_url}
+        />
+        <DocBtn
+          label="Download Condition of Sale"
+          url={p.condition_pdf_url}
+        />
+      </div>
+
+      <EntryDisclaimerModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={() => navigate({ to: "/auction/$id", params: { id: p.id }, search: { from: "card" } })}
+      />
     </main>
+  );
+}
+
+function DocBtn({ label, url }: { label: string; url: string | null | undefined }) {
+  if (!url) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-secondary/30 px-5 py-4 text-sm text-muted-foreground">
+        {label} <span className="block text-xs mt-1 opacity-75">— not yet published</span>
+      </div>
+    );
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card px-5 py-4 text-sm font-semibold text-primary hover:bg-accent"
+    >
+      <span className="inline-flex items-center gap-2">
+        <FileText className="h-4 w-4" /> {label}
+      </span>
+      <Download className="h-4 w-4" />
+    </a>
   );
 }
 
