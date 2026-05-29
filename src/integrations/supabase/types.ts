@@ -136,6 +136,7 @@ export type Database = {
           auction_location: string
           bid_increment: number
           category: Database["public"]["Enums"]["property_category"]
+          condition_pdf_url: string | null
           conditions: string
           created_at: string
           current_bid: number | null
@@ -146,12 +147,14 @@ export type Database = {
           is_paused: boolean
           name: string
           paused_remaining_ms: number | null
+          proclamation_pdf_url: string | null
           reserve_price: number
           round_ends_at: string | null
           round_seconds: number
           status: string
           tenure: string
           title_number: string
+          whitelist_ics: string[]
           winner_id: string | null
         }
         Insert: {
@@ -160,6 +163,7 @@ export type Database = {
           auction_location: string
           bid_increment?: number
           category: Database["public"]["Enums"]["property_category"]
+          condition_pdf_url?: string | null
           conditions: string
           created_at?: string
           current_bid?: number | null
@@ -170,12 +174,14 @@ export type Database = {
           is_paused?: boolean
           name: string
           paused_remaining_ms?: number | null
+          proclamation_pdf_url?: string | null
           reserve_price: number
           round_ends_at?: string | null
           round_seconds?: number
           status?: string
           tenure: string
           title_number: string
+          whitelist_ics?: string[]
           winner_id?: string | null
         }
         Update: {
@@ -184,6 +190,7 @@ export type Database = {
           auction_location?: string
           bid_increment?: number
           category?: Database["public"]["Enums"]["property_category"]
+          condition_pdf_url?: string | null
           conditions?: string
           created_at?: string
           current_bid?: number | null
@@ -194,12 +201,14 @@ export type Database = {
           is_paused?: boolean
           name?: string
           paused_remaining_ms?: number | null
+          proclamation_pdf_url?: string | null
           reserve_price?: number
           round_ends_at?: string | null
           round_seconds?: number
           status?: string
           tenure?: string
           title_number?: string
+          whitelist_ics?: string[]
           winner_id?: string | null
         }
         Relationships: []
