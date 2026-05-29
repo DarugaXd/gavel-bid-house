@@ -61,9 +61,10 @@ export function useSiteSettings() {
   });
 
   // Realtime: live update on save
+
   useEffect(() => {
     const ch = supabase
-      .channel("site-settings-rt")
+      .channel(`site-settings-rt-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "site_settings" },
@@ -81,3 +82,4 @@ export function useSiteSettings() {
 export function s(map: SettingsMap | undefined, key: SettingKey, fallback = ""): string {
   return map?.[key] ?? fallback;
 }
+
