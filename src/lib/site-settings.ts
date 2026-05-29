@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const SETTINGS_KEYS = [
+  "company_name",
+  "company_logo_url",
   "hero_eyebrow",
   "hero_title",
   "hero_description",
@@ -23,6 +25,8 @@ export const SETTINGS_KEYS = [
 export type SettingKey = (typeof SETTINGS_KEYS)[number];
 
 export const SETTINGS_LABELS: Record<SettingKey, string> = {
+  company_name: "Company Name (Header / Brand)",
+  company_logo_url: "Company Logo URL (use uploader below)",
   hero_eyebrow: "Hero Eyebrow",
   hero_title: "Main Landing Page Title",
   hero_description: "Company Welcoming Description",
@@ -60,8 +64,6 @@ export function useSiteSettings() {
     },
   });
 
-  // Realtime: live update on save
-
   useEffect(() => {
     const ch = supabase
       .channel(`site-settings-rt-${Math.random().toString(36).slice(2)}`)
@@ -82,4 +84,3 @@ export function useSiteSettings() {
 export function s(map: SettingsMap | undefined, key: SettingKey, fallback = ""): string {
   return map?.[key] ?? fallback;
 }
-
