@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -93,8 +94,23 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function Header() {
   const { user, signOut, isAdmin, viewMode, setViewMode } = useAuth();
   const { data: settings } = useSiteSettings();
+  const qc = useQueryClient();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const companyName = s(settings, "company_name", "Property Auction House");
   const logoUrl = s(settings, "company_logo_url", "");
+
+  function handleToggleView() {
+    const next = viewMode === "admin" ? "public" : "admin";
+    // Purge cached admin/public data so neither view shows stale leaks.
+    qc.clear();
+    setViewMode(next);
+    // If leaving admin view while on an admin-only route, send to home.
+    if (next === "public" && pathname.startsWith("/admin")) {
+      router.navigate({ to: "/" });
+    }
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -114,7 +130,7 @@ function Header() {
         <nav className="flex items-center gap-2 text-sm">
           {isAdmin && (
             <button
-              onClick={() => setViewMode(viewMode === "admin" ? "public" : "admin")}
+              onClick={handleToggleView}
               title="Toggle Admin / Public view"
               className="inline-flex items-center gap-1.5 rounded-md border border-gold bg-gold/10 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-gold/20"
             >
