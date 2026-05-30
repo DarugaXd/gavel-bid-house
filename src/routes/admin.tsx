@@ -41,7 +41,7 @@ type Contact = {
 type Tab = "properties" | "contacts" | "settings";
 
 function AdminPage() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, viewMode } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("properties");
   const [biddingPropertyId, setBiddingPropertyId] = useState<string | null>(null);
@@ -50,8 +50,15 @@ function AdminPage() {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
+  useEffect(() => {
+    if (!loading && user && isAdmin && viewMode === "public") {
+      navigate({ to: "/" });
+    }
+  }, [loading, user, isAdmin, viewMode, navigate]);
+
   if (loading) return <div className="mx-auto max-w-6xl px-6 py-20 text-muted-foreground">Loading…</div>;
   if (!user) return null;
+  if (isAdmin && viewMode === "public") return null;
   if (!isAdmin) {
     return (
       <main className="mx-auto max-w-md px-6 py-20 text-center">
