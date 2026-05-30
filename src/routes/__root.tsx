@@ -11,7 +11,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { useSiteSettings, s } from "@/lib/site-settings";
-import { Gavel, Shield, Eye } from "lucide-react";
+import { Gavel, Shield, Eye, ShieldAlert } from "lucide-react";
 
 import appCss from "../styles.css?url";
 
