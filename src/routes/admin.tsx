@@ -10,7 +10,7 @@ import { normalizeIc, isValidIc } from "@/lib/ic";
 import { toast } from "sonner";
 import {
   Shield, Plus, Trash2, Pencil, Save, X, Play, Pause, StopCircle,
-  Radio, ChevronRight, Users2, Building2, Settings as SettingsIcon, Clock,
+  Radio, ChevronRight, Users2, Building2, Settings as SettingsIcon,
   ImagePlus, Upload, FileText, ChevronLeft, Sliders, UserPlus,
 } from "lucide-react";
 
