@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as NoticeRouteImport } from './routes/notice'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as AuctionIdRouteImport } from './routes/auction.$id'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticeRoute = NoticeRouteImport.update({
+  id: '/notice',
+  path: '/notice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/notice': typeof NoticeRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/notice': typeof NoticeRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/notice': typeof NoticeRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/notice'
     | '/signup'
     | '/auction/$id'
     | '/property/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/signup' | '/auction/$id' | '/property/$id'
+  to:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/notice'
+    | '/signup'
+    | '/auction/$id'
+    | '/property/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/login'
+    | '/notice'
     | '/signup'
     | '/auction/$id'
     | '/property/$id'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
+  NoticeRoute: typeof NoticeRoute
   SignupRoute: typeof SignupRoute
   AuctionIdRoute: typeof AuctionIdRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -109,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notice': {
+      id: '/notice'
+      path: '/notice'
+      fullPath: '/notice'
+      preLoaderRoute: typeof NoticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -153,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
+  NoticeRoute: NoticeRoute,
   SignupRoute: SignupRoute,
   AuctionIdRoute: AuctionIdRoute,
   PropertyIdRoute: PropertyIdRoute,

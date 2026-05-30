@@ -128,6 +128,14 @@ function Header() {
           </div>
         </Link>
         <nav className="flex items-center gap-2 text-sm">
+          <Link
+            to="/notice"
+            title="Important Notice & System Requirements"
+            className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-secondary/60 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            <ShieldAlert className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Important Notice</span>
+          </Link>
           {isAdmin && (
             <button
               onClick={handleToggleView}
