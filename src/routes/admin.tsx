@@ -129,6 +129,9 @@ function PropertiesPanel({ onOpenBidding }: { onOpenBidding: (id: string) => voi
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchQ, setSearchQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ["admin-properties"],
@@ -146,10 +149,20 @@ function PropertiesPanel({ onOpenBidding }: { onOpenBidding: (id: string) => voi
     qc.invalidateQueries({ queryKey: ["properties"] });
   }
 
+  const q = searchQ.trim().toLowerCase();
+  const filtered = properties.filter((p) => {
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (categoryFilter !== "All" && p.category !== categoryFilter) return false;
+    if (q && !(p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{properties.length} properties in directory</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          {filtered.length} of {properties.length} properties shown
+        </p>
         <button
           onClick={() => { setAdding(true); setEditingId(null); }}
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -158,13 +171,43 @@ function PropertiesPanel({ onOpenBidding }: { onOpenBidding: (id: string) => voi
         </button>
       </div>
 
+      {/* Search & filter bar */}
+      <div className="grid gap-3 rounded-lg border border-border bg-card p-4 sm:grid-cols-[1fr,180px,180px]">
+        <input
+          value={searchQ}
+          onChange={(e) => setSearchQ(e.target.value)}
+          placeholder="Search by name or address…"
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="all">All statuses</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="live">Live</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {CATEGORIES.map((c) => <option key={c} value={c}>{c === "All" ? "All categories" : c}</option>)}
+        </select>
+      </div>
+
       {adding && <PropertyForm onClose={() => { setAdding(false); refresh(); }} />}
 
       {isLoading ? (
         <p className="py-12 text-center text-muted-foreground">Loading properties…</p>
       ) : (
         <div className="space-y-4">
-          {properties.map((p) => (
+          {filtered.length === 0 && (
+            <p className="py-12 text-center text-sm text-muted-foreground">No properties match your filters.</p>
+          )}
+          {filtered.map((p) => (
             <PropertyRow
               key={p.id} p={p}
               editing={editingId === p.id}
