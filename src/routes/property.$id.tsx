@@ -110,8 +110,13 @@ function PropertyDetail() {
 function DocBtn({ label, url }: { label: string; url: string | null | undefined }) {
   if (!url) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-secondary/30 px-5 py-4 text-sm text-muted-foreground">
-        {label} <span className="block text-xs mt-1 opacity-75">— not yet published</span>
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-secondary/30 px-5 py-4 text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-2">
+          <FileText className="h-4 w-4" /> {label}
+        </span>
+        <span className="rounded-md bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Not yet published
+        </span>
       </div>
     );
   }
@@ -120,12 +125,14 @@ function DocBtn({ label, url }: { label: string; url: string | null | undefined 
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card px-5 py-4 text-sm font-semibold text-primary hover:bg-accent"
+      className="group flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card px-5 py-4 text-sm font-semibold text-primary transition-colors hover:bg-accent"
     >
       <span className="inline-flex items-center gap-2">
         <FileText className="h-4 w-4" /> {label}
       </span>
-      <Download className="h-4 w-4" />
+      <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm group-hover:bg-emerald-700">
+        <Download className="h-3 w-3" /> Download
+      </span>
     </a>
   );
 }

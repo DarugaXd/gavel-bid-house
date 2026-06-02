@@ -40,6 +40,35 @@ export type Database = {
           },
         ]
       }
+      auction_whitelist: {
+        Row: {
+          added_at: string
+          ic_number: string
+          id: string
+          property_id: string
+        }
+        Insert: {
+          added_at?: string
+          ic_number: string
+          id?: string
+          property_id: string
+        }
+        Update: {
+          added_at?: string
+          ic_number?: string
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auction_whitelist_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bids: {
         Row: {
           amount: number
@@ -254,7 +283,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          full_name: string | null
+          ic_masked: string | null
+          id: string | null
+        }
+        Insert: {
+          full_name?: string | null
+          ic_masked?: never
+          id?: string | null
+        }
+        Update: {
+          full_name?: string | null
+          ic_masked?: never
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -264,6 +310,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      place_bid: { Args: { p_property_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"

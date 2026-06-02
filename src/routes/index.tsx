@@ -222,6 +222,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
+          <CardStatusPill status={p.status} />
           {p.images && p.images.length > 1 && (
             <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
               +{p.images.length - 1}
@@ -236,6 +237,28 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+function CardStatusPill({ status }: { status: string }) {
+  if (status === "live") {
+    return (
+      <span className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-live px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-live-foreground shadow-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-live-foreground animate-pulse" /> Live
+      </span>
+    );
+  }
+  if (status === "closed") {
+    return (
+      <span className="absolute top-2 left-2 rounded-md bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shadow-sm">
+        Closed
+      </span>
+    );
+  }
+  return (
+    <span className="absolute top-2 left-2 rounded-md bg-background/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary shadow-sm backdrop-blur">
+      Upcoming
+    </span>
   );
 }
 
