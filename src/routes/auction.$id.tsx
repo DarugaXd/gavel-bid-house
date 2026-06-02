@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { formatRM, formatDateTime } from "@/lib/format";
+import { formatRM, formatDateTime, timeAgo, shortName } from "@/lib/format";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { EntryDisclaimerModal } from "@/components/EntryDisclaimerModal";
 import { toast } from "sonner";
-import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert, History } from "lucide-react";
 
 export const Route = createFileRoute("/auction/$id")({
   component: AuctionRoom,
@@ -20,10 +20,16 @@ interface Property {
   round_ends_at: string | null; status: string; winner_id: string | null;
   is_paused: boolean; paused_remaining_ms: number | null;
   round_seconds: number;
-  whitelist_ics: string[] | null;
 }
 
-// 10s per phase × 4 phases (Active → Once → Twice → Final → Sold)
+interface BidRow {
+  id: string;
+  amount: number;
+  created_at: string;
+  bidder_id: string;
+  bidder_name: string | null;
+}
+
 const PHASE_MS = 10_000;
 const TOTAL_WINDOW_MS = PHASE_MS * 4;
 
@@ -38,9 +44,10 @@ function AuctionRoom() {
   const [now, setNow] = useState(Date.now());
   const [placing, setPlacing] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [whitelisted, setWhitelisted] = useState<boolean | null>(null);
+  const [bids, setBids] = useState<BidRow[]>([]);
   const closeTriggered = useRef(false);
 
-  // Tick every 200ms for crisp phase transitions
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(i);
@@ -57,7 +64,40 @@ function AuctionRoom() {
       setProperty(data as Property);
     })();
     refreshAttendees();
+    loadBids();
   }, [id]);
+
+  // Whitelist check via dedicated table (per-bidder RLS)
+  useEffect(() => {
+    if (!user || !icNumber) { setWhitelisted(null); return; }
+    (async () => {
+      // Admins see all rows; regular users see only their own matching entry.
+      // First, see whether ANY rows exist for this property at all using a count:
+      const { count: totalCount } = await supabase
+        .from("auction_whitelist")
+        .select("*", { count: "exact", head: true })
+        .eq("property_id", id);
+      // If admin/owner can see >0, the property has a whitelist enforced.
+      // For regular users, totalCount only reflects rows visible to them
+      // (i.e. their own IC), so we additionally probe with their IC.
+      const { data: ownRow } = await supabase
+        .from("auction_whitelist")
+        .select("id")
+        .eq("property_id", id)
+        .eq("ic_number", icNumber)
+        .maybeSingle();
+
+      // If there are NO whitelist entries visible AND we are a regular user,
+      // we still need to know if a whitelist exists. We rely on a separate
+      // count that uses RLS: if totalCount === 0 we treat it as "open auction".
+      // If totalCount > 0 we require ownRow.
+      if ((totalCount ?? 0) === 0) {
+        setWhitelisted(true); // open auction
+      } else {
+        setWhitelisted(!!ownRow);
+      }
+    })();
+  }, [id, user, icNumber]);
 
   useEffect(() => {
     const ch = supabase
@@ -66,21 +106,14 @@ function AuctionRoom() {
         (payload) => setProperty(payload.new as Property))
       .on("postgres_changes", { event: "*", schema: "public", table: "auction_attendees", filter: `property_id=eq.${id}` },
         () => refreshAttendees())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bids", filter: `property_id=eq.${id}` },
+        () => loadBids())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [id]);
 
-  // Whitelist check
-  const isWhitelisted = useMemo(() => {
-    if (!property) return false;
-    const list = property.whitelist_ics ?? [];
-    if (list.length === 0) return true; // open auction when no whitelist set
-    return !!icNumber && list.includes(icNumber);
-  }, [property, icNumber]);
-
-  // Attendance — only join after disclaimer acceptance + whitelist pass
   useEffect(() => {
-    if (!user || !accepted || !isWhitelisted) return;
+    if (!user || !accepted || whitelisted !== true) return;
     (async () => {
       await supabase.from("auction_attendees").upsert({ property_id: id, user_id: user.id });
       refreshAttendees();
@@ -88,7 +121,7 @@ function AuctionRoom() {
     const leave = async () => { await supabase.from("auction_attendees").delete().eq("property_id", id).eq("user_id", user.id); };
     window.addEventListener("beforeunload", leave);
     return () => { leave(); window.removeEventListener("beforeunload", leave); };
-  }, [id, user, accepted, isWhitelisted]);
+  }, [id, user, accepted, whitelisted]);
 
   async function refreshAttendees() {
     const { count } = await supabase
@@ -98,9 +131,33 @@ function AuctionRoom() {
     setAttendees(count ?? 0);
   }
 
+  async function loadBids() {
+    // Pull last 10 bids; join names via masked profiles_public view
+    const { data, error } = await supabase
+      .from("bids")
+      .select("id, amount, created_at, bidder_id")
+      .eq("property_id", id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) { console.error(error); return; }
+    const ids = Array.from(new Set((data ?? []).map((b) => b.bidder_id)));
+    let nameMap = new Map<string, string | null>();
+    if (ids.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles_public")
+        .select("id, full_name")
+        .in("id", ids);
+      nameMap = new Map((profs ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
+    }
+    setBids((data ?? []).map((b) => ({
+      id: b.id, amount: Number(b.amount), created_at: b.created_at, bidder_id: b.bidder_id,
+      bidder_name: nameMap.get(b.bidder_id) ?? null,
+    })));
+  }
+
   useEffect(() => {
     if (property?.status === "closed" && property.winner_id) {
-      supabase.from("profiles").select("full_name").eq("id", property.winner_id).maybeSingle()
+      supabase.from("profiles_public").select("full_name").eq("id", property.winner_id).maybeSingle()
         .then(({ data }) => setWinnerName(data?.full_name ?? null));
     }
   }, [property?.status, property?.winner_id]);
@@ -114,21 +171,25 @@ function AuctionRoom() {
   }, [property, now]);
 
   const startMs = property ? new Date(property.auction_date).getTime() : 0;
-
   const roundEndsMs = property?.round_ends_at ? new Date(property.round_ends_at).getTime() : 0;
   const roundLeftMs = Math.max(0, roundEndsMs - now);
 
-  // Determine call phase based on remaining time within the 40s window
   const callPhase: "active" | "once" | "twice" | "final" | "sold" = useMemo(() => {
     if (phase !== "live" || !property?.round_ends_at) return "active";
-    if (roundLeftMs > 3 * PHASE_MS) return "active";   // > 30s left
-    if (roundLeftMs > 2 * PHASE_MS) return "once";     // 20-30s left
-    if (roundLeftMs > 1 * PHASE_MS) return "twice";    // 10-20s left
-    if (roundLeftMs > 0) return "final";               // 0-10s left
+    if (roundLeftMs > 3 * PHASE_MS) return "active";
+    if (roundLeftMs > 2 * PHASE_MS) return "once";
+    if (roundLeftMs > 1 * PHASE_MS) return "twice";
+    if (roundLeftMs > 0) return "final";
     return "sold";
   }, [phase, property?.round_ends_at, roundLeftMs]);
 
-  // Auto-start when pre-auction countdown hits 0
+  // Seconds left in current 10s phase (for the ring)
+  const phaseSecondsLeft = useMemo(() => {
+    if (callPhase === "active" || callPhase === "sold") return 0;
+    const ms = roundLeftMs % PHASE_MS;
+    return Math.ceil(ms / 1000);
+  }, [callPhase, roundLeftMs]);
+
   useEffect(() => {
     if (phase !== "pre" || !property) return;
     if (now < startMs) return;
@@ -143,7 +204,6 @@ function AuctionRoom() {
     })();
   }, [phase, now, startMs, property, id]);
 
-  // Auto-close when the 40-second silence window expires
   useEffect(() => {
     if (phase !== "live" || !property) return;
     if (property.is_paused) return;
@@ -163,38 +223,20 @@ function AuctionRoom() {
   async function placeBid() {
     if (!user || !property) return;
     setPlacing(true);
-    const newAmount = Number(property.current_bid ?? property.reserve_price) + Number(property.bid_increment);
-    const newEnds = new Date(Date.now() + TOTAL_WINDOW_MS).toISOString();
-
-    const { error: updErr } = await supabase
-      .from("properties")
-      .update({
-        current_bid: newAmount,
-        current_bidder: user.id,
-        round_ends_at: newEnds,
-        status: "live",
-        is_paused: false,
-        paused_remaining_ms: null,
-      })
-      .eq("id", id)
-      .neq("status", "closed");
-
-    if (updErr) { setPlacing(false); return toast.error(updErr.message); }
-
-    const { error: bidErr } = await supabase
-      .from("bids")
-      .insert({ property_id: id, bidder_id: user.id, amount: newAmount });
+    const { data, error } = await supabase.rpc("place_bid", { p_property_id: id });
     setPlacing(false);
-    if (bidErr) return toast.error(bidErr.message);
-    toast.success(`Bid placed: ${formatRM(newAmount)}`);
+    if (error) return toast.error(error.message);
+    const res = data as { success: boolean; amount?: number; error?: string };
+    if (!res?.success) return toast.error(res?.error ?? "Bid was not accepted");
+    toast.success(`Bid placed: ${formatRM(res.amount ?? 0)}`);
+    loadBids();
   }
 
-  if (!property || authLoading) {
+  if (!property || authLoading || whitelisted === null) {
     return <div className="mx-auto max-w-5xl px-6 py-20 text-muted-foreground">Loading auction room…</div>;
   }
 
-  // BLOCK: whitelist rejection
-  if (!isWhitelisted) {
+  if (whitelisted === false) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-20">
         <div className="rounded-lg border-2 border-destructive/40 bg-card p-8 text-center">
@@ -205,7 +247,6 @@ function AuctionRoom() {
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             Contact the auctioneer if you believe this is an error.
-            {icNumber ? <> Your registered IC: <strong className="text-primary">{icNumber}</strong></> : null}
           </p>
           <Link to="/" className="mt-6 inline-block rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             Back to directory
@@ -254,19 +295,25 @@ function AuctionRoom() {
             </div>
           </div>
 
-          {/* 3-Call status banner */}
           {phase === "live" && (
-            <div className={"rounded-lg border-2 p-6 text-center transition-colors " + banner.boxClass}>
-              <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Auctioneer's Call</div>
-              <div className={"mt-2 font-display text-5xl font-bold " + banner.textClass}>
-                {banner.label}
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">
-                {callPhase === "active"
-                  ? "Place a bid to keep the auction open"
-                  : callPhase === "sold"
-                  ? "Hammer down"
-                  : "Bid now to reset the auctioneer's call"}
+            <div className={"rounded-lg border-2 p-6 transition-colors " + banner.boxClass}>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 text-center">
+                  <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Auctioneer's Call</div>
+                  <div className={"mt-2 font-display text-5xl font-bold " + banner.textClass}>
+                    {banner.label}
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {callPhase === "active"
+                      ? "Place a bid to keep the auction open"
+                      : callPhase === "sold"
+                      ? "Hammer down"
+                      : "Bid now to reset the auctioneer's call"}
+                  </div>
+                </div>
+                {(callPhase === "once" || callPhase === "twice" || callPhase === "final") && (
+                  <CountdownRing seconds={phaseSecondsLeft} total={10} accent={callPhase === "final" ? "text-live" : "text-primary"} />
+                )}
               </div>
             </div>
           )}
@@ -322,6 +369,8 @@ function AuctionRoom() {
                 : null}
             />
           )}
+
+          <BidHistoryPanel bids={bids} now={now} />
         </div>
       </div>
 
@@ -331,6 +380,56 @@ function AuctionRoom() {
         onConfirm={() => setAccepted(true)}
       />
     </main>
+  );
+}
+
+function BidHistoryPanel({ bids, now }: { bids: BidRow[]; now: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <History className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold text-primary">Recent bids</h3>
+        <span className="ml-auto text-xs text-muted-foreground">Last {bids.length}</span>
+      </div>
+      <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
+        {bids.length === 0 ? (
+          <p className="px-4 py-6 text-center text-xs text-muted-foreground">No bids yet — be the first.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {bids.map((b) => (
+              <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                <span className="truncate font-medium text-primary">{shortName(b.bidder_name)}</span>
+                <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
+                <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CountdownRing({ seconds, total, accent }: { seconds: number; total: number; accent: string }) {
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  const frac = Math.max(0, Math.min(1, seconds / total));
+  const offset = c * (1 - frac);
+  return (
+    <div className="relative h-16 w-16 shrink-0">
+      <svg viewBox="0 0 56 56" className="h-full w-full -rotate-90">
+        <circle cx="28" cy="28" r={r} stroke="currentColor" strokeWidth="4" fill="none" className="text-border" />
+        <circle
+          cx="28" cy="28" r={r} fill="none" strokeWidth="4" strokeLinecap="round"
+          stroke="currentColor" className={accent}
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 0.2s linear" }}
+        />
+      </svg>
+      <div className={"absolute inset-0 flex items-center justify-center font-display text-lg font-bold tabular-nums " + accent}>
+        {seconds}
+      </div>
+    </div>
   );
 }
 
