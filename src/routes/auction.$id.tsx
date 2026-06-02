@@ -147,7 +147,11 @@ function AuctionRoom() {
         .from("profiles_public")
         .select("id, full_name")
         .in("id", ids);
-      nameMap = new Map((profs ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
+      nameMap = new Map(
+        (profs ?? [])
+          .filter((p): p is { id: string; full_name: string | null } => !!p.id)
+          .map((p) => [p.id, p.full_name]),
+      );
     }
     setBids((data ?? []).map((b) => ({
       id: b.id, amount: Number(b.amount), created_at: b.created_at, bidder_id: b.bidder_id,
