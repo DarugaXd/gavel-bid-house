@@ -222,6 +222,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
+          <CardStatusPill status={p.status} />
           {p.images && p.images.length > 1 && (
             <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
               +{p.images.length - 1}
