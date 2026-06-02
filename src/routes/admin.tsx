@@ -417,33 +417,50 @@ function LiveControls({ p, onChange }: { p: Property; onChange: () => void }) {
 }
 
 function WhitelistEditor({ p, onChange }: { p: Property; onChange: () => void }) {
-  const [items, setItems] = useState<string[]>(p.whitelist_ics ?? []);
+  const qc = useQueryClient();
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["admin-whitelist", p.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("auction_whitelist")
+        .select("id, ic_number, added_at")
+        .eq("property_id", p.id)
+        .order("added_at", { ascending: true });
+      if (error) throw error;
+      return data as { id: string; ic_number: string; added_at: string }[];
+    },
+  });
   const [input, setInput] = useState("");
-  const [saving, setSaving] = useState(false);
-  useEffect(() => { setItems(p.whitelist_ics ?? []); }, [p.whitelist_ics]);
+  const [busy, setBusy] = useState(false);
 
-  function addIc() {
-    const ic = normalizeIc(input);
-    if (!isValidIc(ic)) return toast.error("Enter a valid 12-digit Malaysian IC");
-    if (items.includes(ic)) return toast.error("That IC is already on the whitelist");
-    setItems([...items, ic]);
-    setInput("");
-  }
-
-  function removeIc(ic: string) {
-    setItems(items.filter((x) => x !== ic));
-  }
-
-  async function save() {
-    setSaving(true);
-    const { error } = await supabase.from("properties").update({ whitelist_ics: items }).eq("id", p.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success(`Whitelist saved (${items.length} bidder${items.length === 1 ? "" : "s"})`);
+  function refresh() {
+    qc.invalidateQueries({ queryKey: ["admin-whitelist", p.id] });
     onChange();
   }
 
-  const dirty = JSON.stringify(items) !== JSON.stringify(p.whitelist_ics ?? []);
+  async function addIc() {
+    const ic = normalizeIc(input);
+    if (!isValidIc(ic)) return toast.error("Enter a valid 12-digit Malaysian IC");
+    if (items.some((x) => x.ic_number === ic)) return toast.error("That IC is already on the whitelist");
+    setBusy(true);
+    const { error } = await supabase
+      .from("auction_whitelist")
+      .insert({ property_id: p.id, ic_number: ic });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("IC added to whitelist");
+    setInput("");
+    refresh();
+  }
+
+  async function removeIc(rowId: string) {
+    setBusy(true);
+    const { error } = await supabase.from("auction_whitelist").delete().eq("id", rowId);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("IC removed");
+    refresh();
+  }
 
   return (
     <section className="rounded-lg border-2 border-primary/20 bg-card p-6">
@@ -452,16 +469,9 @@ function WhitelistEditor({ p, onChange }: { p: Property; onChange: () => void })
           <h2 className="font-display text-xl font-semibold text-primary">Approved Bidder NRIC Whitelist</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Only NRICs listed here may enter this property's live auction room. Leave empty to allow any signed-in bidder.
+            Saved instantly — no separate save step.
           </p>
         </div>
-        {dirty && (
-          <button
-            onClick={save} disabled={saving}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
-          >
-            <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save whitelist"}
-          </button>
-        )}
       </div>
 
       <div className="mt-5 flex gap-2">
@@ -473,32 +483,36 @@ function WhitelistEditor({ p, onChange }: { p: Property; onChange: () => void })
           maxLength={12}
           className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm tracking-wider"
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addIc(); } }}
+          disabled={busy}
         />
         <button
           onClick={addIc}
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           <UserPlus className="h-4 w-4" /> Add IC
         </button>
       </div>
 
       <div className="mt-5">
-        {items.length === 0 ? (
+        {isLoading ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Loading whitelist…</p>
+        ) : items.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-secondary/40 px-4 py-6 text-center text-sm text-muted-foreground">
             No NRICs added yet — this auction is currently <strong>open to all signed-in bidders</strong>.
           </p>
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border bg-secondary/30">
-            {items.map((ic, i) => (
-              <li key={ic} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+            {items.map((row, i) => (
+              <li key={row.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                 <span className="font-mono font-semibold text-primary tabular-nums">
-                  <span className="text-muted-foreground mr-3 text-xs">#{i + 1}</span>{ic}
+                  <span className="text-muted-foreground mr-3 text-xs">#{i + 1}</span>{row.ic_number}
                 </span>
                 <button
-                  onClick={() => removeIc(ic)}
+                  onClick={() => removeIc(row.id)}
                   className="rounded p-1 text-destructive hover:bg-destructive/10"
-                  type="button" aria-label="Remove"
+                  type="button" aria-label="Remove" disabled={busy}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
