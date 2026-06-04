@@ -36,12 +36,12 @@ const TOTAL_WINDOW_MS = PHASE_MS * 4;
 
 function AuctionRoom() {
   const { id } = Route.useParams();
-  const { user, loading: authLoading, icNumber, fullName } = useAuth();
+  const { user, loading: authLoading, icNumber } = useAuth();
   const navigate = useNavigate();
+  const t = useT();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [attendees, setAttendees] = useState(0);
-  const [winnerName, setWinnerName] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [placing, setPlacing] = useState(false);
   const [accepted, setAccepted] = useState(false);
