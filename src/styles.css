@@ -37,40 +37,68 @@
 
 :root {
   --radius: 0.5rem;
-  /* Warm beige backgrounds */
+  /* Warm beige backgrounds — hex fallback then oklch for Safari <15.4 */
+  --background: #f3ede0;
   --background: oklch(0.96 0.018 80);
+  --foreground: #3d2e1a;
   --foreground: oklch(0.28 0.04 50);
+  --card: #f8f3ea;
   --card: oklch(0.98 0.012 85);
+  --card-foreground: #3d2e1a;
   --card-foreground: oklch(0.28 0.04 50);
+  --popover: #f8f3ea;
   --popover: oklch(0.98 0.012 85);
+  --popover-foreground: #3d2e1a;
   --popover-foreground: oklch(0.28 0.04 50);
   /* Rich dark brown */
+  --primary: #3d2c1a;
   --primary: oklch(0.32 0.05 50);
+  --primary-foreground: #f8f3ea;
   --primary-foreground: oklch(0.97 0.018 85);
+  --secondary: #ebe3d2;
   --secondary: oklch(0.92 0.022 80);
+  --secondary-foreground: #3d2c1a;
   --secondary-foreground: oklch(0.32 0.05 50);
+  --muted: #ede5d4;
   --muted: oklch(0.93 0.018 80);
+  --muted-foreground: #7a6248;
   --muted-foreground: oklch(0.48 0.04 55);
+  --accent: #dfd0b3;
   --accent: oklch(0.88 0.035 70);
+  --accent-foreground: #3d2c1a;
   --accent-foreground: oklch(0.28 0.04 50);
+  --destructive: #8b2020;
   --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: #faf8f4;
   --destructive-foreground: oklch(0.98 0.01 80);
+  --border: #d4c4a8;
   --border: oklch(0.85 0.025 75);
+  --input: #e5dcc8;
   --input: oklch(0.90 0.020 78);
+  --ring: #3d2c1a;
   --ring: oklch(0.32 0.05 50);
+  --live: #9e2a0e;
   --live: oklch(0.62 0.22 28);
+  --live-foreground: #ffffff;
   --live-foreground: oklch(0.99 0 0);
+  --gold: #b89a40;
   --gold: oklch(0.72 0.13 75);
 }
 
 .dark {
+  --background: #2a2218;
   --background: oklch(0.20 0.025 50);
+  --foreground: #f0e8d8;
   --foreground: oklch(0.95 0.015 80);
+  --card: #352c20;
   --card: oklch(0.25 0.03 50);
+  --card-foreground: #f0e8d8;
   --card-foreground: oklch(0.95 0.015 80);
   --popover: oklch(0.25 0.03 50);
   --popover-foreground: oklch(0.95 0.015 80);
+  --primary: #e8dcc8;
   --primary: oklch(0.90 0.02 80);
+  --primary-foreground: #352c20;
   --primary-foreground: oklch(0.25 0.03 50);
   --secondary: oklch(0.30 0.03 50);
   --secondary-foreground: oklch(0.95 0.015 80);
@@ -80,6 +108,7 @@
   --accent-foreground: oklch(0.95 0.015 80);
   --destructive: oklch(0.62 0.20 25);
   --destructive-foreground: oklch(0.98 0.01 80);
+  --border: #4a3e2e;
   --border: oklch(0.35 0.03 50);
   --input: oklch(0.30 0.03 50);
   --ring: oklch(0.75 0.04 70);
@@ -97,6 +126,7 @@
     font-family: var(--font-sans);
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  input[type="checkbox"] { accent-color: var(--color-primary, #3d2c1a); }
 }
 
 @layer utilities {
@@ -106,4 +136,30 @@
       radial-gradient(oklch(0.32 0.05 50 / 0.04) 1px, transparent 1px);
     background-size: 18px 18px;
   }
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .backdrop-blur {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
 }
+
+@media (max-width: 768px) {
+  button, a { min-height: 44px; }
+  main { padding-bottom: 80px; }
+}
+
+/* Print: property summary */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .no-print, header, nav, footer, button, .print-hide { display: none !important; }
+  .print-only { display: block !important; }
+  .print-summary { color: #000 !important; }
+  .print-summary * { color: #000 !important; background: #fff !important; }
+  .print-summary table { width: 100%; border-collapse: collapse; }
+  .print-summary th, .print-summary td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  @page { size: A4; margin: 18mm; }
+}
+.print-only { display: none; }
