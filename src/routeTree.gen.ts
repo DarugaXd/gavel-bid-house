@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NoticeRouteImport } from './routes/notice'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -20,6 +21,11 @@ import { Route as AuctionIdRouteImport } from './routes/auction.$id'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NoticeRoute = NoticeRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/notice': typeof NoticeRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/auction/$id': typeof AuctionIdRoute
   '/property/$id': typeof PropertyIdRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/notice'
+    | '/privacy'
     | '/signup'
     | '/auction/$id'
     | '/property/$id'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/notice'
+    | '/privacy'
     | '/signup'
     | '/auction/$id'
     | '/property/$id'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/notice'
+    | '/privacy'
     | '/signup'
     | '/auction/$id'
     | '/property/$id'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   NoticeRoute: typeof NoticeRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   AuctionIdRoute: typeof AuctionIdRoute
   PropertyIdRoute: typeof PropertyIdRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notice': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   NoticeRoute: NoticeRoute,
+  PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   AuctionIdRoute: AuctionIdRoute,
   PropertyIdRoute: PropertyIdRoute,
@@ -187,3 +208,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
