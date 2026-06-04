@@ -467,18 +467,59 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
   }
 }
 
-function ClosedPanel({ currentBid, isWinner, winnerLabel }: { currentBid: number; isWinner: boolean; winnerLabel: string | null }) {
+function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; isWinner: boolean; hasWinner: boolean }) {
+  // STATE C — no bids placed
+  if (!hasWinner) {
+    return (
+      <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
+        <Gavel className="mx-auto h-10 w-10 text-primary" />
+        <div className="mt-3 font-display text-xl font-bold text-primary">
+          Auction Concluded — No Bids Placed
+        </div>
+      </div>
+    );
+  }
+  // STATE A — current user is the winner
+  if (isWinner) {
+    return (
+      <div className="rounded-lg border-2 border-gold bg-gold/15 p-6 text-center">
+        <Trophy className="mx-auto h-12 w-12 text-gold" />
+        <h2 className="mt-3 font-display text-xl font-bold text-primary">
+          Congratulations — You are the Successful Bidder
+        </h2>
+        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">Your winning bid</div>
+        <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
+        <p className="mt-4 text-sm text-foreground/90">
+          You have been identified as the successful bidder for this property. Please contact our
+          auctioneer or appointed lawyer immediately to proceed with the next steps.
+        </p>
+        <a
+          href="/#contact"
+          className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          View Contact Details
+        </a>
+      </div>
+    );
+  }
+  // STATE B — auction had a winner, but it's not the current user
   return (
-    <div className={"rounded-lg border-2 p-6 text-center " + (isWinner ? "border-gold bg-gold/15" : "border-primary bg-card")}>
-      <Trophy className={"mx-auto h-10 w-10 " + (isWinner ? "text-gold" : "text-primary")} />
-      <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">
-        {isWinner ? "Congratulations — You Won" : "Auction Sold"}
-      </div>
-      <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
-      <div className="mt-3 text-sm text-muted-foreground">Awarded to</div>
-      <div className="font-semibold text-primary">
-        {winnerLabel ?? "No bids placed"}
-      </div>
+    <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
+      <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
+      <h2 className="mt-3 font-display text-xl font-bold text-primary">
+        Thank You for Participating
+      </h2>
+      <p className="mt-3 text-sm text-foreground/90">
+        The auction for this property has concluded. We appreciate your participation. For
+        enquiries regarding this or future auctions, please contact our auctioneer or appointed
+        lawyer.
+      </p>
+      <a
+        href="/#contact"
+        className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+      >
+        View Contact Details
+      </a>
     </div>
   );
 }
