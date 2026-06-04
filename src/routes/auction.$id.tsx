@@ -361,14 +361,12 @@ function AuctionRoom() {
           {phase === "closed" && (
             <ClosedPanel
               currentBid={currentBid}
-              isWinner={property.winner_id === user?.id}
-              winnerLabel={property.winner_id
-                ? (property.winner_id === user?.id ? (fullName ?? "You") : (winnerName ?? "Bidder"))
-                : null}
+              isWinner={!!property.winner_id && property.winner_id === user?.id}
+              hasWinner={!!property.winner_id}
             />
           )}
 
-          <BidHistoryPanel bids={bids} now={now} />
+          <BidHistoryPanel bids={bids} now={now} currentUserId={user?.id ?? null} />
         </div>
       </div>
 
