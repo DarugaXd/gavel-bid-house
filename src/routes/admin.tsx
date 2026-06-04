@@ -226,6 +226,18 @@ function PropertiesPanel({ onOpenBidding }: { onOpenBidding: (id: string) => voi
 function PropertyRow({ p, editing, onEdit, onClose, onChange, onOpenBidding }: {
   p: Property; editing: boolean; onEdit: () => void; onClose: () => void; onChange: () => void; onOpenBidding: () => void;
 }) {
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { data: notifCount = 0 } = useQuery({
+    queryKey: ["notif-count", p.id],
+    queryFn: async () => {
+      const { count } = await (supabase.from as any)("property_notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("property_id", p.id);
+      return count ?? 0;
+    },
+    refetchInterval: 15000,
+  });
+
   if (editing) return <PropertyForm property={p} onClose={onClose} />;
 
   const cover = p.images && p.images.length > 0 ? p.images[0] : p.image_url;
@@ -247,6 +259,13 @@ function PropertyRow({ p, editing, onEdit, onClose, onChange, onOpenBidding }: {
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{p.category}</span>
                 <StatusBadge status={p.status} paused={p.is_paused} />
+                <button
+                  onClick={() => setNotifOpen(true)}
+                  title="View notification signups"
+                  className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-secondary/40 px-2 py-0.5 text-[10px] font-bold text-primary hover:bg-secondary"
+                >
+                  <Bell className="h-3 w-3" /> {notifCount}
+                </button>
               </div>
               <h3 className="mt-1 font-display text-lg font-semibold text-primary line-clamp-1">{p.name}</h3>
               <div className="mt-1 text-xs text-muted-foreground line-clamp-1">{p.address}</div>
@@ -281,6 +300,50 @@ function PropertyRow({ p, editing, onEdit, onClose, onChange, onOpenBidding }: {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+      {notifOpen && <NotificationsModal propertyId={p.id} propertyName={p.name} onClose={() => setNotifOpen(false)} />}
+    </div>
+  );
+}
+
+function NotificationsModal({ propertyId, propertyName, onClose }: { propertyId: string; propertyName: string; onClose: () => void }) {
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["notifs", propertyId],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from as any)("property_notifications")
+        .select("email, created_at")
+        .eq("property_id", propertyId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as { email: string; created_at: string }[];
+    },
+  });
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-lg border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Notify Me Signups</div>
+            <h3 className="font-display text-base font-semibold text-primary">{propertyName}</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1.5 hover:bg-accent"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto p-4">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No signups yet.</p>
+          ) : (
+            <ul className="divide-y divide-border text-sm">
+              {rows.map((r, i) => (
+                <li key={i} className="flex items-center justify-between gap-3 py-2">
+                  <span className="truncate font-medium text-primary">{r.email}</span>
+                  <span className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>
