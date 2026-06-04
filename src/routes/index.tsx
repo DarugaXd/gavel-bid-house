@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES, type Category, formatRM, formatDateTime } from "@/lib/format";
 import { useSiteSettings, s } from "@/lib/site-settings";
+import { useT } from "@/lib/i18n";
+import { NotifyMeButton } from "@/components/NotifyMeButton";
 import { Gavel, MapPin, Calendar, Mail, Phone, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -31,6 +33,7 @@ interface Property {
 function HomePage() {
   const [category, setCategory] = useState<Category>("All");
   const { data: settings } = useSiteSettings();
+  const t = useT();
 
   const { data: properties = [] } = useQuery({
     queryKey: ["properties"],
@@ -50,13 +53,12 @@ function HomePage() {
 
   const now = Date.now();
   const liveSoon = properties.filter((p) => {
-    const t = new Date(p.auction_date).getTime();
-    return t - now < 2 * 60 * 60 * 1000;
+    const tt = new Date(p.auction_date).getTime();
+    return tt - now < 2 * 60 * 60 * 1000;
   });
 
   return (
     <main className="min-h-screen">
-      {/* Section A: Hero */}
       <section className="relative overflow-hidden border-b border-border bg-grain">
         <div className="absolute inset-0 bg-gradient-to-b from-accent/40 via-background to-background" />
         <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32">
@@ -72,27 +74,26 @@ function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#directory" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90">
-                {s(settings, "hero_cta_primary", "Browse Properties")}
+                {s(settings, "hero_cta_primary", t("Browse Properties"))}
               </a>
               <a href="#live" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-6 py-3 font-medium hover:bg-accent">
-                {s(settings, "hero_cta_secondary", "View Live Auctions")}
+                {s(settings, "hero_cta_secondary", t("View Live Auctions"))}
               </a>
             </div>
             <dl className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8 max-w-xl">
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Active Lots</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{properties.length}</dd></div>
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Categories</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">7</dd></div>
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Live Now</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{liveSoon.length}</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{properties.length}</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Categories")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">7</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Live Now")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{liveSoon.length}</dd></div>
             </dl>
           </div>
         </div>
       </section>
 
-      {/* Section B: Directory */}
       <section id="directory" className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "directory_eyebrow", "Property Directory")}</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "directory_title", "Find your next lot.")}</h2>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "directory_eyebrow", t("Property Directory"))}</p>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "directory_title", t("Find your next lot."))}</h2>
           </div>
         </div>
 
@@ -116,17 +117,16 @@ function HomePage() {
         <div className="grid gap-5 sm:grid-cols-2">
           {filtered.map((p) => <PropertyCard key={p.id} p={p} />)}
           {filtered.length === 0 && (
-            <p className="col-span-full py-16 text-center text-muted-foreground">No properties in this category yet.</p>
+            <p className="col-span-full py-16 text-center text-muted-foreground">{t("No properties in this category yet.")}</p>
           )}
         </div>
       </section>
 
-      {/* Section C: Upcoming Live */}
       <section id="live" className="border-t border-border bg-secondary/40">
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "live_eyebrow", "Starting Soon")}</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", "Upcoming live auctions.")}</h2>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "live_eyebrow", t("Starting Soon"))}</p>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", t("Upcoming live auctions."))}</h2>
             <p className="mt-2 text-muted-foreground whitespace-pre-line">{s(settings, "live_subtitle", "")}</p>
           </div>
 
@@ -140,7 +140,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Section D: Contact */}
       <ContactSection />
     </main>
   );
@@ -148,6 +147,7 @@ function HomePage() {
 
 function ContactSection() {
   const { data: settings } = useSiteSettings();
+  const t = useT();
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
     queryFn: async () => {
@@ -161,10 +161,10 @@ function ContactSection() {
   });
 
   return (
-    <footer className="border-t border-border bg-primary text-primary-foreground">
+    <footer id="contact" className="border-t border-border bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-20">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">{s(settings, "contact_eyebrow", "Contact Us")}</p>
-        <h2 className="mt-2 font-display text-4xl font-bold">{s(settings, "contact_title", "Speak with our auction specialists.")}</h2>
+        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">{s(settings, "contact_eyebrow", t("Contact Us"))}</p>
+        <h2 className="mt-2 font-display text-4xl font-bold">{s(settings, "contact_title", t("Speak with our auction specialists."))}</h2>
 
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           {contacts.map((c) => (
@@ -173,7 +173,11 @@ function ContactSection() {
         </div>
 
         <div className="mt-16 border-t border-primary-foreground/15 pt-6 text-xs text-primary-foreground/60 flex flex-wrap justify-between gap-4">
-          <span>© {new Date().getFullYear()} {s(settings, "footer_copyright", "Property Auction House Sdn Bhd. All rights reserved.")}</span>
+          <span>
+            © {new Date().getFullYear()} {s(settings, "footer_copyright", "Property Auction House Sdn Bhd. All rights reserved.")}
+            {" · "}
+            <Link to="/privacy" className="underline hover:text-primary-foreground">{t("Privacy Policy")}</Link>
+          </span>
           <span>{s(settings, "footer_tagline", "Licensed Auctioneers · Kuala Lumpur")}</span>
         </div>
       </div>
@@ -191,6 +195,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   const startsIn = new Date(p.auction_date).getTime() - now;
   const started = startsIn <= 0;
   const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
+  const t = useT();
 
   return (
     <div className="relative">
@@ -208,11 +213,16 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
             </p>
           </div>
           <div className="mt-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Reserve Price</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Reserve Price")}</div>
             <div className="font-display text-2xl font-bold text-primary">{formatRM(p.reserve_price)}</div>
             <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="h-3 w-3" /> {formatDateTime(p.auction_date)}
             </div>
+            {p.status === "upcoming" && (
+              <div className="mt-3" onClick={(e) => e.preventDefault()}>
+                <NotifyMeButton propertyId={p.id} />
+              </div>
+            )}
           </div>
         </div>
         <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
