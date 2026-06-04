@@ -379,7 +379,25 @@ function AuctionRoom() {
   );
 }
 
-function BidHistoryPanel({ bids, now }: { bids: BidRow[]; now: number }) {
+function BidHistoryPanel({ bids, now, currentUserId }: { bids: BidRow[]; now: number; currentUserId: string | null }) {
+  // Assign anonymous labels by order of first appearance (chronological).
+  // bids list is ordered newest-first → iterate reversed to number them in order.
+  const labels = useMemo(() => {
+    const map = new Map<string, string>();
+    let n = 0;
+    const chrono = [...bids].reverse();
+    for (const b of chrono) {
+      if (map.has(b.bidder_id)) continue;
+      if (currentUserId && b.bidder_id === currentUserId) {
+        map.set(b.bidder_id, "You");
+      } else {
+        n += 1;
+        map.set(b.bidder_id, `Bidder #${n}`);
+      }
+    }
+    return map;
+  }, [bids, currentUserId]);
+
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -392,13 +410,17 @@ function BidHistoryPanel({ bids, now }: { bids: BidRow[]; now: number }) {
           <p className="px-4 py-6 text-center text-xs text-muted-foreground">No bids yet — be the first.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {bids.map((b) => (
-              <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                <span className="truncate font-medium text-primary">{shortName(b.bidder_name)}</span>
-                <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
-                <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
-              </li>
-            ))}
+            {bids.map((b) => {
+              const label = labels.get(b.bidder_id) ?? "Bidder";
+              const isYou = label === "You";
+              return (
+                <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                  <span className={"truncate font-medium " + (isYou ? "text-gold" : "text-primary")}>{label}</span>
+                  <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
+                  <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
