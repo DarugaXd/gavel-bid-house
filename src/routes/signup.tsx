@@ -104,6 +104,12 @@ function SignupPage() {
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already registered? <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
         </p>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          By creating an account you agree to our{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer" className="font-medium text-primary underline">
+            PDPA Privacy Policy
+          </a>.
+        </p>
       </div>
     </main>
   );
