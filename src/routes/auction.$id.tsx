@@ -160,12 +160,7 @@ function AuctionRoom() {
     })));
   }
 
-  useEffect(() => {
-    if (property?.status === "closed" && property.winner_id) {
-      supabase.from("profiles_public").select("full_name").eq("id", property.winner_id).maybeSingle()
-        .then(({ data }) => setWinnerName(data?.full_name ?? null));
-    }
-  }, [property?.status, property?.winner_id]);
+  // Section 1c: winner name fetch removed — winners see only their own result.
 
   const phase = useMemo(() => {
     if (!property) return "loading";
