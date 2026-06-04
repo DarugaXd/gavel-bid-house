@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   open: boolean;
@@ -8,12 +9,13 @@ interface Props {
 
 export function EntryDisclaimerModal({ open, onClose, onConfirm }: Props) {
   const [checked, setChecked] = useState(false);
+  const t = useT();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg rounded-lg border-2 border-primary/40 bg-card shadow-2xl">
         <div className="border-b border-border px-6 py-4">
-          <h2 className="font-display text-xl font-bold text-primary">Bidder Eligibility Confirmation</h2>
+          <h2 className="font-display text-xl font-bold text-primary">{t("Bidder Eligibility Confirmation")}</h2>
           <p className="mt-1 text-xs text-muted-foreground uppercase tracking-wider">Mandatory before entering the live auction room</p>
         </div>
         <div className="px-6 py-5 space-y-4 text-sm text-foreground/90">
@@ -26,11 +28,14 @@ export function EntryDisclaimerModal({ open, onClose, onConfirm }: Props) {
               type="checkbox"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="mt-0.5 h-4 w-4 accent-[color:var(--color-primary)] cursor-pointer"
+              className="mt-0.5 h-4 w-4 cursor-pointer"
             />
             <span className="text-sm leading-relaxed">
               I am 18 years or older, of sound mind, not a bankrupt, and I agree to the
-              Property Auction House Terms and Conditions and PDPA Privacy Policy.
+              Property Auction House Terms and Conditions and{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary underline">
+                PDPA Privacy Policy
+              </a>.
             </span>
           </label>
         </div>
@@ -46,7 +51,7 @@ export function EntryDisclaimerModal({ open, onClose, onConfirm }: Props) {
             disabled={!checked}
             className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Enter Live Auction
+            {t("Enter Live Auction")}
           </button>
         </div>
       </div>
