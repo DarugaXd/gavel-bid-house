@@ -2,11 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { formatRM, formatDateTime, timeAgo, shortName } from "@/lib/format";
+import { formatRM, formatDateTime, timeAgo } from "@/lib/format";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { EntryDisclaimerModal } from "@/components/EntryDisclaimerModal";
+import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
-import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert, History } from "lucide-react";
+import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert, History, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/auction/$id")({
   component: AuctionRoom,
