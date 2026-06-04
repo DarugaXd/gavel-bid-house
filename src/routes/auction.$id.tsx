@@ -2,11 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { formatRM, formatDateTime, timeAgo, shortName } from "@/lib/format";
+import { formatRM, formatDateTime, timeAgo } from "@/lib/format";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { EntryDisclaimerModal } from "@/components/EntryDisclaimerModal";
+import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
-import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert, History } from "lucide-react";
+import { ArrowLeft, Users, Gavel, Trophy, ShieldAlert, History, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/auction/$id")({
   component: AuctionRoom,
@@ -35,12 +36,12 @@ const TOTAL_WINDOW_MS = PHASE_MS * 4;
 
 function AuctionRoom() {
   const { id } = Route.useParams();
-  const { user, loading: authLoading, icNumber, fullName } = useAuth();
+  const { user, loading: authLoading, icNumber } = useAuth();
   const navigate = useNavigate();
+  const t = useT();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [attendees, setAttendees] = useState(0);
-  const [winnerName, setWinnerName] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [placing, setPlacing] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -159,12 +160,7 @@ function AuctionRoom() {
     })));
   }
 
-  useEffect(() => {
-    if (property?.status === "closed" && property.winner_id) {
-      supabase.from("profiles_public").select("full_name").eq("id", property.winner_id).maybeSingle()
-        .then(({ data }) => setWinnerName(data?.full_name ?? null));
-    }
-  }, [property?.status, property?.winner_id]);
+  // Section 1c: winner name fetch removed — winners see only their own result.
 
   const phase = useMemo(() => {
     if (!property) return "loading";
@@ -247,13 +243,11 @@ function AuctionRoom() {
           <ShieldAlert className="mx-auto h-12 w-12 text-destructive" />
           <h1 className="mt-4 font-display text-2xl font-bold text-primary">Access Denied</h1>
           <p className="mt-3 text-sm text-foreground/90">
-            Your NRIC is not registered or authorized for this specific property auction.
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Contact the auctioneer if you believe this is an error.
+            Your NRIC is not registered for this auction. Please contact the auctioneer
+            if you believe this is an error.
           </p>
           <Link to="/" className="mt-6 inline-block rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Back to directory
+            {t("Back to Directory")}
           </Link>
         </div>
       </main>
@@ -367,14 +361,12 @@ function AuctionRoom() {
           {phase === "closed" && (
             <ClosedPanel
               currentBid={currentBid}
-              isWinner={property.winner_id === user?.id}
-              winnerLabel={property.winner_id
-                ? (property.winner_id === user?.id ? (fullName ?? "You") : (winnerName ?? "Bidder"))
-                : null}
+              isWinner={!!property.winner_id && property.winner_id === user?.id}
+              hasWinner={!!property.winner_id}
             />
           )}
 
-          <BidHistoryPanel bids={bids} now={now} />
+          <BidHistoryPanel bids={bids} now={now} currentUserId={user?.id ?? null} />
         </div>
       </div>
 
@@ -387,7 +379,25 @@ function AuctionRoom() {
   );
 }
 
-function BidHistoryPanel({ bids, now }: { bids: BidRow[]; now: number }) {
+function BidHistoryPanel({ bids, now, currentUserId }: { bids: BidRow[]; now: number; currentUserId: string | null }) {
+  // Assign anonymous labels by order of first appearance (chronological).
+  // bids list is ordered newest-first → iterate reversed to number them in order.
+  const labels = useMemo(() => {
+    const map = new Map<string, string>();
+    let n = 0;
+    const chrono = [...bids].reverse();
+    for (const b of chrono) {
+      if (map.has(b.bidder_id)) continue;
+      if (currentUserId && b.bidder_id === currentUserId) {
+        map.set(b.bidder_id, "You");
+      } else {
+        n += 1;
+        map.set(b.bidder_id, `Bidder #${n}`);
+      }
+    }
+    return map;
+  }, [bids, currentUserId]);
+
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -400,13 +410,17 @@ function BidHistoryPanel({ bids, now }: { bids: BidRow[]; now: number }) {
           <p className="px-4 py-6 text-center text-xs text-muted-foreground">No bids yet — be the first.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {bids.map((b) => (
-              <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                <span className="truncate font-medium text-primary">{shortName(b.bidder_name)}</span>
-                <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
-                <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
-              </li>
-            ))}
+            {bids.map((b) => {
+              const label = labels.get(b.bidder_id) ?? "Bidder";
+              const isYou = label === "You";
+              return (
+                <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                  <span className={"truncate font-medium " + (isYou ? "text-gold" : "text-primary")}>{label}</span>
+                  <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
+                  <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -453,18 +467,59 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
   }
 }
 
-function ClosedPanel({ currentBid, isWinner, winnerLabel }: { currentBid: number; isWinner: boolean; winnerLabel: string | null }) {
+function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; isWinner: boolean; hasWinner: boolean }) {
+  // STATE C — no bids placed
+  if (!hasWinner) {
+    return (
+      <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
+        <Gavel className="mx-auto h-10 w-10 text-primary" />
+        <div className="mt-3 font-display text-xl font-bold text-primary">
+          Auction Concluded — No Bids Placed
+        </div>
+      </div>
+    );
+  }
+  // STATE A — current user is the winner
+  if (isWinner) {
+    return (
+      <div className="rounded-lg border-2 border-gold bg-gold/15 p-6 text-center">
+        <Trophy className="mx-auto h-12 w-12 text-gold" />
+        <h2 className="mt-3 font-display text-xl font-bold text-primary">
+          Congratulations — You are the Successful Bidder
+        </h2>
+        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">Your winning bid</div>
+        <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
+        <p className="mt-4 text-sm text-foreground/90">
+          You have been identified as the successful bidder for this property. Please contact our
+          auctioneer or appointed lawyer immediately to proceed with the next steps.
+        </p>
+        <a
+          href="/#contact"
+          className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          View Contact Details
+        </a>
+      </div>
+    );
+  }
+  // STATE B — auction had a winner, but it's not the current user
   return (
-    <div className={"rounded-lg border-2 p-6 text-center " + (isWinner ? "border-gold bg-gold/15" : "border-primary bg-card")}>
-      <Trophy className={"mx-auto h-10 w-10 " + (isWinner ? "text-gold" : "text-primary")} />
-      <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">
-        {isWinner ? "Congratulations — You Won" : "Auction Sold"}
-      </div>
-      <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
-      <div className="mt-3 text-sm text-muted-foreground">Awarded to</div>
-      <div className="font-semibold text-primary">
-        {winnerLabel ?? "No bids placed"}
-      </div>
+    <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
+      <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
+      <h2 className="mt-3 font-display text-xl font-bold text-primary">
+        Thank You for Participating
+      </h2>
+      <p className="mt-3 text-sm text-foreground/90">
+        The auction for this property has concluded. We appreciate your participation. For
+        enquiries regarding this or future auctions, please contact our auctioneer or appointed
+        lawyer.
+      </p>
+      <a
+        href="/#contact"
+        className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+      >
+        View Contact Details
+      </a>
     </div>
   );
 }
