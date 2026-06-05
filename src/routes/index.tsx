@@ -279,12 +279,8 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
 }
 
 function CardStatusPill({ status }: { status: string }) {
-  if (status === "live") {
-    return (
-      <span className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-live px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-live-foreground shadow-sm">
-        <span className="h-1.5 w-1.5 rounded-full bg-live-foreground animate-pulse" /> Live
-      </span>
-    );
+   if (status === "live") {
+    return null;
   }
   if (status === "closed") {
     return (
