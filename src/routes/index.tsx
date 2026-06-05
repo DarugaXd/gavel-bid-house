@@ -32,6 +32,7 @@ interface Property {
 
 function HomePage() {
   const [category, setCategory] = useState<Category>("All");
+  const [isPastTab, setIsPastTab] = useState(false);
   const { data: settings } = useSiteSettings();
   const t = useT();
 
@@ -47,15 +48,24 @@ function HomePage() {
     },
   });
 
-  const filtered = category === "All"
-    ? properties
-    : properties.filter((p) => p.category === category);
+  const isClosedish = (s: string) => s === "closed" || s === "past";
+
+  const filtered = isPastTab
+    ? properties.filter((p) => isClosedish(p.status))
+    : (category === "All" ? properties : properties.filter((p) => p.category === category))
+        .filter((p) => !isClosedish(p.status));
 
   const now = Date.now();
-  const liveSoon = properties.filter((p) => {
-    const tt = new Date(p.auction_date).getTime();
-    return tt - now < 2 * 60 * 60 * 1000;
-  });
+  const liveSoon = properties
+    .filter((p) => {
+      if (isClosedish(p.status)) return false;
+      if (p.status === "live") return true;
+      const tt = new Date(p.auction_date).getTime();
+      return tt - now < 7 * 24 * 60 * 60 * 1000 && tt > now;
+    })
+    .sort((a, b) => new Date(a.auction_date).getTime() - new Date(b.auction_date).getTime());
+
+  const activeLotsCount = properties.filter((p) => !isClosedish(p.status)).length;
 
   return (
     <main className="min-h-screen">
