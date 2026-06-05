@@ -216,6 +216,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   }, [live]);
   const startsIn = new Date(p.auction_date).getTime() - now;
   const started = startsIn <= 0;
+  void started;
   const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
   const t = useT();
 
