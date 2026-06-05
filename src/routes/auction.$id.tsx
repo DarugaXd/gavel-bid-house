@@ -68,35 +68,28 @@ function AuctionRoom() {
     loadBids();
   }, [id]);
 
-  // Whitelist check via dedicated table (per-bidder RLS)
+  // Whitelist check: server-side openness probe + per-user IC lookup
   useEffect(() => {
     if (!user || !icNumber) { setWhitelisted(null); return; }
     (async () => {
-      // Admins see all rows; regular users see only their own matching entry.
-      // First, see whether ANY rows exist for this property at all using a count:
-      const { count: totalCount } = await supabase
-        .from("auction_whitelist")
-        .select("*", { count: "exact", head: true })
-        .eq("property_id", id);
-      // If admin/owner can see >0, the property has a whitelist enforced.
-      // For regular users, totalCount only reflects rows visible to them
-      // (i.e. their own IC), so we additionally probe with their IC.
+      const { data: openData, error: openErr } = await supabase
+        .rpc("is_auction_open", { p_property_id: id });
+      if (openErr) {
+        console.error(openErr);
+        setWhitelisted(false);
+        return;
+      }
+      if (openData === true) {
+        setWhitelisted(true);
+        return;
+      }
       const { data: ownRow } = await supabase
         .from("auction_whitelist")
         .select("id")
         .eq("property_id", id)
         .eq("ic_number", icNumber)
         .maybeSingle();
-
-      // If there are NO whitelist entries visible AND we are a regular user,
-      // we still need to know if a whitelist exists. We rely on a separate
-      // count that uses RLS: if totalCount === 0 we treat it as "open auction".
-      // If totalCount > 0 we require ownRow.
-      if ((totalCount ?? 0) === 0) {
-        setWhitelisted(true); // open auction
-      } else {
-        setWhitelisted(!!ownRow);
-      }
+      setWhitelisted(!!ownRow);
     })();
   }, [id, user, icNumber]);
 
