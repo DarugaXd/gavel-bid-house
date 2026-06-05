@@ -192,9 +192,10 @@ function AuctionRoom() {
     if (property.status === "live") return;
     (async () => {
       const ends = new Date(Date.now() + TOTAL_WINDOW_MS).toISOString();
+      const auctionEnds = new Date(Date.now() + AUCTION_DURATION_MS).toISOString();
       await supabase
         .from("properties")
-        .update({ status: "live", round_ends_at: ends })
+        .update({ status: "live", round_ends_at: ends, auction_ends_at: auctionEnds })
         .eq("id", id)
         .eq("status", "upcoming");
     })();
@@ -215,6 +216,21 @@ function AuctionRoom() {
         .eq("status", "live");
     })();
   }, [phase, roundLeftMs, property, id]);
+
+  // 30-minute hard auto-close
+  useEffect(() => {
+    if (phase !== "live" || !property?.auction_ends_at) return;
+    if (now < new Date(property.auction_ends_at).getTime()) return;
+    if (closeTriggered.current) return;
+    closeTriggered.current = true;
+    (async () => {
+      await supabase
+        .from("properties")
+        .update({ status: "closed", winner_id: property.current_bidder })
+        .eq("id", id)
+        .eq("status", "live");
+    })();
+  }, [phase, now, property, id]);
 
   async function placeBid() {
     if (!user || !property) return;
