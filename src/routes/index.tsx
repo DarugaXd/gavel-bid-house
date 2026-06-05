@@ -219,56 +219,62 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
   const t = useT();
 
+  const showLiveNow = p.status === "live";
+  const showStartingSoon =
+    p.status === "upcoming" && !started && startsIn <= 12 * 60 * 60 * 1000;
+
   return (
-    <div className="relative">
-      <Link
-        to={live ? "/auction/$id" : "/property/$id"}
-        params={{ id: p.id }}
-        className="group flex overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
-      >
-        <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{p.category}</div>
-            <h3 className="mt-2 font-display text-xl font-semibold text-primary line-clamp-2 group-hover:underline decoration-primary/30">{p.name}</h3>
-            <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
-              <MapPin className="h-3 w-3 shrink-0" /> {p.address}
-            </p>
-          </div>
-          <div className="mt-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Reserve Price")}</div>
-            <div className="font-display text-2xl font-bold text-primary">{formatRM(p.reserve_price)}</div>
-            <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" /> {formatDateTime(p.auction_date)}
-            </div>
-            {p.status === "upcoming" && (
-              <div className="mt-3" onClick={(e) => e.preventDefault()}>
-                <NotifyMeButton propertyId={p.id} />
-              </div>
-            )}
-          </div>
+    <Link
+      to={live ? "/auction/$id" : "/property/$id"}
+      params={{ id: p.id }}
+      className="group flex overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
+    >
+      <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{p.category}</div>
+          <h3 className="mt-2 font-display text-xl font-semibold text-primary line-clamp-2 group-hover:underline decoration-primary/30">{p.name}</h3>
+          <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
+            <MapPin className="h-3 w-3 shrink-0" /> {p.address}
+          </p>
         </div>
-        <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
-          <img
-            src={cover}
-            alt={p.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          <CardStatusPill status={p.status} />
-          {p.images && p.images.length > 1 && (
-            <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
-              +{p.images.length - 1}
-            </span>
+        <div className="mt-4">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Reserve Price")}</div>
+          <div className="font-display text-2xl font-bold text-primary">{formatRM(p.reserve_price)}</div>
+          <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" /> {formatDateTime(p.auction_date)}
+          </div>
+          {p.status === "upcoming" && (
+            <div className="mt-3" onClick={(e) => e.preventDefault()}>
+              <NotifyMeButton propertyId={p.id} />
+            </div>
           )}
         </div>
-      </Link>
-      {live && (
-        <div className="absolute -bottom-3 left-6 z-10 flex items-center gap-1.5 rounded-md bg-live px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-live-foreground shadow-lg">
-          <span className="inline-block h-2 w-2 rounded-full bg-live-foreground animate-pulse" />
-          {started ? "LIVE NOW" : "STARTING SOON"}
-        </div>
-      )}
-    </div>
+      </div>
+      <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
+        <img
+          src={cover}
+          alt={p.name}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+        <CardStatusPill status={p.status} />
+        {showLiveNow && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-live px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-live-foreground shadow-lg">
+            <span className="h-1.5 w-1.5 rounded-full bg-live-foreground animate-pulse" /> LIVE NOW
+          </span>
+        )}
+        {!showLiveNow && showStartingSoon && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary shadow-lg">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> STARTING SOON
+          </span>
+        )}
+        {p.images && p.images.length > 1 && (
+          <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
+            +{p.images.length - 1}
+          </span>
+        )}
+      </div>
+    </Link>
   );
 }
 
