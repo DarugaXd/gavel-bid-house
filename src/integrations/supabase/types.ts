@@ -183,7 +183,6 @@ export type Database = {
           status: string
           tenure: string
           title_number: string
-          whitelist_ics: string[]
           winner_id: string | null
         }
         Insert: {
@@ -210,7 +209,6 @@ export type Database = {
           status?: string
           tenure: string
           title_number: string
-          whitelist_ics?: string[]
           winner_id?: string | null
         }
         Update: {
@@ -237,7 +235,6 @@ export type Database = {
           status?: string
           tenure?: string
           title_number?: string
-          whitelist_ics?: string[]
           winner_id?: string | null
         }
         Relationships: []
