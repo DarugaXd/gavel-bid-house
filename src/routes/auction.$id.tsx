@@ -566,3 +566,26 @@ function PreAuction({ startMs, now }: { startMs: number; now: number }) {
     </div>
   );
 }
+
+function AuctionCloseCountdown({ endsAt, now }: { endsAt: string; now: number }) {
+  const msLeft = Math.max(0, new Date(endsAt).getTime() - now);
+  const totalSec = Math.floor(msLeft / 1000);
+  const mm = Math.floor(totalSec / 60);
+  const ss = totalSec % 60;
+  const urgent = msLeft < 5 * 60 * 1000;
+  return (
+    <div
+      className={
+        "mt-4 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium " +
+        (urgent
+          ? "border-live bg-live/10 text-live animate-pulse"
+          : "border-border bg-card text-primary")
+      }
+    >
+      <span className="uppercase tracking-wider text-[10px] opacity-70">Auction closes in</span>
+      <span className="font-display text-lg tabular-nums font-bold">
+        {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+      </span>
+    </div>
+  );
+}
