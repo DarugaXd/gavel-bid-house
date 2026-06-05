@@ -279,6 +279,11 @@ function AuctionRoom() {
         <ArrowLeft className="h-4 w-4" /> Exit auction room
       </Link>
 
+      {phase === "live" && property.auction_ends_at && (
+        <AuctionCloseCountdown endsAt={property.auction_ends_at} now={now} />
+      )}
+
+
       <div className="mt-6 grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
           <div className="relative">
