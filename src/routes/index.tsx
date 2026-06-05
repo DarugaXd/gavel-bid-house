@@ -32,6 +32,7 @@ interface Property {
 
 function HomePage() {
   const [category, setCategory] = useState<Category>("All");
+  const [isPastTab, setIsPastTab] = useState(false);
   const { data: settings } = useSiteSettings();
   const t = useT();
 
@@ -47,15 +48,24 @@ function HomePage() {
     },
   });
 
-  const filtered = category === "All"
-    ? properties
-    : properties.filter((p) => p.category === category);
+  const isClosedish = (s: string) => s === "closed" || s === "past";
+
+  const filtered = isPastTab
+    ? properties.filter((p) => isClosedish(p.status))
+    : (category === "All" ? properties : properties.filter((p) => p.category === category))
+        .filter((p) => !isClosedish(p.status));
 
   const now = Date.now();
-  const liveSoon = properties.filter((p) => {
-    const tt = new Date(p.auction_date).getTime();
-    return tt - now < 2 * 60 * 60 * 1000;
-  });
+  const liveSoon = properties
+    .filter((p) => {
+      if (isClosedish(p.status)) return false;
+      if (p.status === "live") return true;
+      const tt = new Date(p.auction_date).getTime();
+      return tt - now < 7 * 24 * 60 * 60 * 1000 && tt > now;
+    })
+    .sort((a, b) => new Date(a.auction_date).getTime() - new Date(b.auction_date).getTime());
+
+  const activeLotsCount = properties.filter((p) => !isClosedish(p.status)).length;
 
   return (
     <main className="min-h-screen">
@@ -81,7 +91,7 @@ function HomePage() {
               </a>
             </div>
             <dl className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8 max-w-xl">
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{properties.length}</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{activeLotsCount}</dd></div>
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Categories")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">7</dd></div>
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Live Now")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{liveSoon.length}</dd></div>
             </dl>
@@ -97,14 +107,14 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="mb-8 flex flex-wrap gap-2 border-b border-border pb-1">
+        <div className="mb-8 flex flex-wrap items-center gap-2 border-b border-border pb-1">
           {CATEGORIES.map((c) => (
             <button
               key={c}
-              onClick={() => setCategory(c)}
+              onClick={() => { setCategory(c); setIsPastTab(false); }}
               className={
                 "rounded-t-md px-4 py-2.5 text-sm font-medium transition-colors " +
-                (category === c
+                (!isPastTab && category === c
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground")
               }
@@ -112,6 +122,18 @@ function HomePage() {
               {c}
             </button>
           ))}
+          <span className="mx-2 hidden h-6 w-px bg-border sm:block" aria-hidden />
+          <button
+            onClick={() => setIsPastTab(true)}
+            className={
+              "ml-auto rounded-t-md px-4 py-2.5 text-sm font-medium transition-colors " +
+              (isPastTab
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground")
+            }
+          >
+            {t("Past Auctions")}
+          </button>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -126,12 +148,12 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "live_eyebrow", t("Starting Soon"))}</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", t("Upcoming live auctions."))}</h2>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", t("Live & upcoming auctions (next 7 days)."))}</h2>
             <p className="mt-2 text-muted-foreground whitespace-pre-line">{s(settings, "live_subtitle", "")}</p>
           </div>
 
           {liveSoon.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">No live or imminent auctions right now — check back soon.</p>
+            <p className="py-12 text-center text-muted-foreground">{t("No auctions scheduled in the next 7 days — check back soon.")}</p>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2">
               {liveSoon.map((p) => <PropertyCard key={p.id} p={p} live />)}
@@ -197,56 +219,62 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
   const t = useT();
 
+  const showLiveNow = p.status === "live";
+  const showStartingSoon =
+    p.status === "upcoming" && !started && startsIn <= 12 * 60 * 60 * 1000;
+
   return (
-    <div className="relative">
-      <Link
-        to={live ? "/auction/$id" : "/property/$id"}
-        params={{ id: p.id }}
-        className="group flex overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
-      >
-        <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{p.category}</div>
-            <h3 className="mt-2 font-display text-xl font-semibold text-primary line-clamp-2 group-hover:underline decoration-primary/30">{p.name}</h3>
-            <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
-              <MapPin className="h-3 w-3 shrink-0" /> {p.address}
-            </p>
-          </div>
-          <div className="mt-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Reserve Price")}</div>
-            <div className="font-display text-2xl font-bold text-primary">{formatRM(p.reserve_price)}</div>
-            <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" /> {formatDateTime(p.auction_date)}
-            </div>
-            {p.status === "upcoming" && (
-              <div className="mt-3" onClick={(e) => e.preventDefault()}>
-                <NotifyMeButton propertyId={p.id} />
-              </div>
-            )}
-          </div>
+    <Link
+      to={live ? "/auction/$id" : "/property/$id"}
+      params={{ id: p.id }}
+      className="group flex overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg"
+    >
+      <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{p.category}</div>
+          <h3 className="mt-2 font-display text-xl font-semibold text-primary line-clamp-2 group-hover:underline decoration-primary/30">{p.name}</h3>
+          <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1 line-clamp-1">
+            <MapPin className="h-3 w-3 shrink-0" /> {p.address}
+          </p>
         </div>
-        <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
-          <img
-            src={cover}
-            alt={p.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-          <CardStatusPill status={p.status} />
-          {p.images && p.images.length > 1 && (
-            <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
-              +{p.images.length - 1}
-            </span>
+        <div className="mt-4">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Reserve Price")}</div>
+          <div className="font-display text-2xl font-bold text-primary">{formatRM(p.reserve_price)}</div>
+          <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" /> {formatDateTime(p.auction_date)}
+          </div>
+          {p.status === "upcoming" && (
+            <div className="mt-3" onClick={(e) => e.preventDefault()}>
+              <NotifyMeButton propertyId={p.id} />
+            </div>
           )}
         </div>
-      </Link>
-      {live && (
-        <div className="absolute -bottom-3 left-6 z-10 flex items-center gap-1.5 rounded-md bg-live px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-live-foreground shadow-lg">
-          <span className="inline-block h-2 w-2 rounded-full bg-live-foreground animate-pulse" />
-          {started ? "LIVE NOW" : "STARTING SOON"}
-        </div>
-      )}
-    </div>
+      </div>
+      <div className="relative w-2/5 max-w-[240px] shrink-0 overflow-hidden bg-muted">
+        <img
+          src={cover}
+          alt={p.name}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+        <CardStatusPill status={p.status} />
+        {showLiveNow && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-live px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-live-foreground shadow-lg">
+            <span className="h-1.5 w-1.5 rounded-full bg-live-foreground animate-pulse" /> LIVE NOW
+          </span>
+        )}
+        {!showLiveNow && showStartingSoon && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary shadow-lg">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> STARTING SOON
+          </span>
+        )}
+        {p.images && p.images.length > 1 && (
+          <span className="absolute bottom-2 right-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-medium text-primary backdrop-blur">
+            +{p.images.length - 1}
+          </span>
+        )}
+      </div>
+    </Link>
   );
 }
 

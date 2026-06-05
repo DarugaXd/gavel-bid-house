@@ -21,7 +21,10 @@ interface Property {
   round_ends_at: string | null; status: string; winner_id: string | null;
   is_paused: boolean; paused_remaining_ms: number | null;
   round_seconds: number;
+  auction_ends_at: string | null;
 }
+
+const AUCTION_DURATION_MS = 30 * 60 * 1000;
 
 interface BidRow {
   id: string;
@@ -68,35 +71,28 @@ function AuctionRoom() {
     loadBids();
   }, [id]);
 
-  // Whitelist check via dedicated table (per-bidder RLS)
+  // Whitelist check: server-side openness probe + per-user IC lookup
   useEffect(() => {
     if (!user || !icNumber) { setWhitelisted(null); return; }
     (async () => {
-      // Admins see all rows; regular users see only their own matching entry.
-      // First, see whether ANY rows exist for this property at all using a count:
-      const { count: totalCount } = await supabase
-        .from("auction_whitelist")
-        .select("*", { count: "exact", head: true })
-        .eq("property_id", id);
-      // If admin/owner can see >0, the property has a whitelist enforced.
-      // For regular users, totalCount only reflects rows visible to them
-      // (i.e. their own IC), so we additionally probe with their IC.
+      const { data: openData, error: openErr } = await supabase
+        .rpc("is_auction_open", { p_property_id: id });
+      if (openErr) {
+        console.error(openErr);
+        setWhitelisted(false);
+        return;
+      }
+      if (openData === true) {
+        setWhitelisted(true);
+        return;
+      }
       const { data: ownRow } = await supabase
         .from("auction_whitelist")
         .select("id")
         .eq("property_id", id)
         .eq("ic_number", icNumber)
         .maybeSingle();
-
-      // If there are NO whitelist entries visible AND we are a regular user,
-      // we still need to know if a whitelist exists. We rely on a separate
-      // count that uses RLS: if totalCount === 0 we treat it as "open auction".
-      // If totalCount > 0 we require ownRow.
-      if ((totalCount ?? 0) === 0) {
-        setWhitelisted(true); // open auction
-      } else {
-        setWhitelisted(!!ownRow);
-      }
+      setWhitelisted(!!ownRow);
     })();
   }, [id, user, icNumber]);
 
@@ -196,9 +192,10 @@ function AuctionRoom() {
     if (property.status === "live") return;
     (async () => {
       const ends = new Date(Date.now() + TOTAL_WINDOW_MS).toISOString();
+      const auctionEnds = new Date(Date.now() + AUCTION_DURATION_MS).toISOString();
       await supabase
         .from("properties")
-        .update({ status: "live", round_ends_at: ends })
+        .update({ status: "live", round_ends_at: ends, auction_ends_at: auctionEnds })
         .eq("id", id)
         .eq("status", "upcoming");
     })();
@@ -219,6 +216,21 @@ function AuctionRoom() {
         .eq("status", "live");
     })();
   }, [phase, roundLeftMs, property, id]);
+
+  // 30-minute hard auto-close
+  useEffect(() => {
+    if (phase !== "live" || !property?.auction_ends_at) return;
+    if (now < new Date(property.auction_ends_at).getTime()) return;
+    if (closeTriggered.current) return;
+    closeTriggered.current = true;
+    (async () => {
+      await supabase
+        .from("properties")
+        .update({ status: "closed", winner_id: property.current_bidder })
+        .eq("id", id)
+        .eq("status", "live");
+    })();
+  }, [phase, now, property, id]);
 
   async function placeBid() {
     if (!user || !property) return;
@@ -266,6 +278,11 @@ function AuctionRoom() {
       <Link to="/" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-accent">
         <ArrowLeft className="h-4 w-4" /> Exit auction room
       </Link>
+
+      {phase === "live" && property.auction_ends_at && (
+        <AuctionCloseCountdown endsAt={property.auction_ends_at} now={now} />
+      )}
+
 
       <div className="mt-6 grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
@@ -546,6 +563,29 @@ function PreAuction({ startMs, now }: { startMs: number; now: number }) {
       <p className="mt-4 text-center text-xs text-muted-foreground">
         Starts {formatDateTime(new Date(startMs).toISOString())}
       </p>
+    </div>
+  );
+}
+
+function AuctionCloseCountdown({ endsAt, now }: { endsAt: string; now: number }) {
+  const msLeft = Math.max(0, new Date(endsAt).getTime() - now);
+  const totalSec = Math.floor(msLeft / 1000);
+  const mm = Math.floor(totalSec / 60);
+  const ss = totalSec % 60;
+  const urgent = msLeft < 5 * 60 * 1000;
+  return (
+    <div
+      className={
+        "mt-4 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium " +
+        (urgent
+          ? "border-live bg-live/10 text-live animate-pulse"
+          : "border-border bg-card text-primary")
+      }
+    >
+      <span className="uppercase tracking-wider text-[10px] opacity-70">Auction closes in</span>
+      <span className="font-display text-lg tabular-nums font-bold">
+        {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+      </span>
     </div>
   );
 }
