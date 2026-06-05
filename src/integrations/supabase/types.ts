@@ -162,6 +162,7 @@ export type Database = {
         Row: {
           address: string
           auction_date: string
+          auction_ends_at: string | null
           auction_location: string
           bid_increment: number
           category: Database["public"]["Enums"]["property_category"]
@@ -188,6 +189,7 @@ export type Database = {
         Insert: {
           address: string
           auction_date: string
+          auction_ends_at?: string | null
           auction_location: string
           bid_increment?: number
           category: Database["public"]["Enums"]["property_category"]
@@ -214,6 +216,7 @@ export type Database = {
         Update: {
           address?: string
           auction_date?: string
+          auction_ends_at?: string | null
           auction_location?: string
           bid_increment?: number
           category?: Database["public"]["Enums"]["property_category"]
@@ -339,6 +342,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_auction_open: { Args: { p_property_id: string }; Returns: boolean }
       place_bid: { Args: { p_property_id: string }; Returns: Json }
     }
     Enums: {
