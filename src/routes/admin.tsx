@@ -272,7 +272,7 @@ function PropertyRow({ p, editing, onEdit, onClose, onChange, onOpenBidding }: {
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
                 <span><span className="text-muted-foreground">Reserve:</span> <strong className="text-primary">{formatRM(p.reserve_price)}</strong></span>
                 <span><span className="text-muted-foreground">Increment:</span> <strong className="text-primary">{formatRM(p.bid_increment)}</strong></span>
-                <span><span className="text-muted-foreground">Whitelisted ICs:</span> <strong className="text-primary">{(p.whitelist_ics ?? []).length}</strong></span>
+                
                 <span><span className="text-muted-foreground">Auction:</span> <strong className="text-primary">{formatDateTime(p.auction_date)}</strong></span>
                 {p.current_bid != null && (
                   <span><span className="text-muted-foreground">Current bid:</span> <strong className="text-live">{formatRM(p.current_bid)}</strong></span>
