@@ -91,7 +91,7 @@ function HomePage() {
               </a>
             </div>
             <dl className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8 max-w-xl">
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{properties.length}</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{activeLotsCount}</dd></div>
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Categories")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">7</dd></div>
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Live Now")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{liveSoon.length}</dd></div>
             </dl>
