@@ -21,7 +21,10 @@ interface Property {
   round_ends_at: string | null; status: string; winner_id: string | null;
   is_paused: boolean; paused_remaining_ms: number | null;
   round_seconds: number;
+  auction_ends_at: string | null;
 }
+
+const AUCTION_DURATION_MS = 30 * 60 * 1000;
 
 interface BidRow {
   id: string;
