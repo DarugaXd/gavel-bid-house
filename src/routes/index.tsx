@@ -107,14 +107,14 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="mb-8 flex flex-wrap gap-2 border-b border-border pb-1">
+        <div className="mb-8 flex flex-wrap items-center gap-2 border-b border-border pb-1">
           {CATEGORIES.map((c) => (
             <button
               key={c}
-              onClick={() => setCategory(c)}
+              onClick={() => { setCategory(c); setIsPastTab(false); }}
               className={
                 "rounded-t-md px-4 py-2.5 text-sm font-medium transition-colors " +
-                (category === c
+                (!isPastTab && category === c
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground")
               }
@@ -122,6 +122,18 @@ function HomePage() {
               {c}
             </button>
           ))}
+          <span className="mx-2 hidden h-6 w-px bg-border sm:block" aria-hidden />
+          <button
+            onClick={() => setIsPastTab(true)}
+            className={
+              "ml-auto rounded-t-md px-4 py-2.5 text-sm font-medium transition-colors " +
+              (isPastTab
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground")
+            }
+          >
+            {t("Past Auctions")}
+          </button>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -136,12 +148,12 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-6 py-20">
           <div className="mb-10">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{s(settings, "live_eyebrow", t("Starting Soon"))}</p>
-            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", t("Upcoming live auctions."))}</h2>
+            <h2 className="mt-2 font-display text-4xl font-bold text-primary">{s(settings, "live_title", t("Live & upcoming auctions (next 7 days)."))}</h2>
             <p className="mt-2 text-muted-foreground whitespace-pre-line">{s(settings, "live_subtitle", "")}</p>
           </div>
 
           {liveSoon.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">No live or imminent auctions right now — check back soon.</p>
+            <p className="py-12 text-center text-muted-foreground">{t("No auctions scheduled in the next 7 days — check back soon.")}</p>
           ) : (
             <div className="grid gap-5 sm:grid-cols-2">
               {liveSoon.map((p) => <PropertyCard key={p.id} p={p} live />)}
