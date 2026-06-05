@@ -30,7 +30,7 @@ type Property = {
   round_seconds: number;
   proclamation_pdf_url: string | null;
   condition_pdf_url: string | null;
-  whitelist_ics: string[];
+  
 };
 
 type Contact = {
