@@ -200,7 +200,7 @@ function ContactSection() {
             {" · "}
             <Link to="/privacy" className="underline hover:text-primary-foreground">{t("Privacy Policy")}</Link>
           </span>
-          <span>{s(settings, "footer_tagline", "Licensed Auctioneers · Kuala Lumpur")}</span>
+          <span>{s(settings, "footer_tagline", "Licensed Auctioneers · Malaysia · Sabah")}</span>
         </div>
       </div>
     </footer>
