@@ -786,7 +786,7 @@ function PropertyForm({ property, onClose }: { property?: Property; onClose: () 
         <In label="Address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} className="sm:col-span-2" />
         <In label="Auction Location" value={form.auction_location} onChange={(v) => setForm({ ...form, auction_location: v })} className="sm:col-span-2" />
         <In label="Pre-Auction Start (Date & Time)" type="datetime-local" value={form.auction_date} onChange={(v) => setForm({ ...form, auction_date: v })} />
-        <Sel label="Status" value={form.status} options={["upcoming", "live", "closed"]} onChange={(v) => setForm({ ...form, status: v })} />
+        <Sel label="Status" value={form.status} options={["upcoming", "live", "closed", "past"]} onChange={(v) => setForm({ ...form, status: v })} />
         <Ta label="Auction Conditions" value={form.conditions} onChange={(v) => setForm({ ...form, conditions: v })} className="sm:col-span-2" />
       </div>
 
