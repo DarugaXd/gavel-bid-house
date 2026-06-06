@@ -95,7 +95,7 @@ function SignupPage() {
             hint={form.ic_number.length > 0 && !isValidIc(form.ic_number) ? `${form.ic_number.length}/12 digits` : undefined}
           />
           <Field label="Email Address" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          <Field label="Password" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} hint="Min. 8 characters with at least one uppercase letter, number, and special character." />
           <Field label="Confirm Password" type="password" value={form.confirm} onChange={(v) => setForm({ ...form, confirm: v })}
             hint={form.confirm.length > 0 && form.password !== form.confirm ? "Passwords do not match" : undefined} />
           <button
