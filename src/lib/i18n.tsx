@@ -41,6 +41,19 @@ const STRINGS: Record<string, { en: string; bm: string }> = {
   "You'll be notified": { en: "You'll be notified", bm: "Anda akan diberitahu" },
   "Already registered": { en: "Already registered", bm: "Sudah didaftarkan" },
   "Privacy Policy": { en: "Privacy Policy", bm: "Dasar Privasi" },
+  "Past Auctions": { en: "Past Auctions", bm: "Lelongan Lalu" },
+  "No auctions scheduled in the next 7 days — check back soon.": {
+    en: "No auctions scheduled in the next 7 days — check back soon.",
+    bm: "Tiada lelongan dijadualkan dalam 7 hari akan datang — semak semula tidak lama lagi.",
+  },
+  "Live & upcoming auctions (next 7 days).": {
+    en: "Live & upcoming auctions (next 7 days).",
+    bm: "Lelongan langsung & akan datang (7 hari akan datang).",
+  },
+  "No live or imminent auctions right now — check back soon.": {
+    en: "No live or imminent auctions right now — check back soon.",
+    bm: "Tiada lelongan langsung atau hampir bermula sekarang — semak semula tidak lama lagi.",
+  },
 };
 
 interface Ctx { lang: Lang; toggle: () => void; t: (k: string) => string; }

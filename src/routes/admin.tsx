@@ -353,8 +353,13 @@ function NotificationsModal({ propertyId, propertyName, onClose }: { propertyId:
 function StatusBadge({ status, paused }: { status: string; paused: boolean }) {
   const cls = status === "live"
     ? (paused ? "bg-muted text-muted-foreground" : "bg-live text-live-foreground")
-    : status === "closed" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground";
-  const label = status === "live" ? (paused ? "LIVE · PAUSED" : "LIVE") : status.toUpperCase();
+    : status === "closed" ? "bg-primary text-primary-foreground"
+    : status === "past" ? "bg-primary text-primary-foreground"
+    : "bg-secondary text-secondary-foreground";
+  const label = status === "live"
+    ? (paused ? "LIVE · PAUSED" : "LIVE")
+    : status === "past" ? "PAST"
+    : status.toUpperCase();
   return <span className={"rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " + cls}>{label}</span>;
 }
 
@@ -420,8 +425,13 @@ function LiveControls({ p, onChange }: { p: Property; onChange: () => void }) {
   async function goLive() {
     const ends = new Date(Date.now() + 40 * 1000).toISOString();
     const { error } = await supabase.from("properties").update({
-      status: "live", auction_date: new Date().toISOString(),
-      round_ends_at: ends, is_paused: false, paused_remaining_ms: null, winner_id: null,
+      status: "live",
+      auction_date: new Date().toISOString(),
+      round_ends_at: ends,
+      auction_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      is_paused: false,
+      paused_remaining_ms: null,
+      winner_id: null,
     }).eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success("Auction is LIVE");
@@ -776,7 +786,7 @@ function PropertyForm({ property, onClose }: { property?: Property; onClose: () 
         <In label="Address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} className="sm:col-span-2" />
         <In label="Auction Location" value={form.auction_location} onChange={(v) => setForm({ ...form, auction_location: v })} className="sm:col-span-2" />
         <In label="Pre-Auction Start (Date & Time)" type="datetime-local" value={form.auction_date} onChange={(v) => setForm({ ...form, auction_date: v })} />
-        <Sel label="Status" value={form.status} options={["upcoming", "live", "closed"]} onChange={(v) => setForm({ ...form, status: v })} />
+        <Sel label="Status" value={form.status} options={["upcoming", "live", "closed", "past"]} onChange={(v) => setForm({ ...form, status: v })} />
         <Ta label="Auction Conditions" value={form.conditions} onChange={(v) => setForm({ ...form, conditions: v })} className="sm:col-span-2" />
       </div>
 
