@@ -420,8 +420,13 @@ function LiveControls({ p, onChange }: { p: Property; onChange: () => void }) {
   async function goLive() {
     const ends = new Date(Date.now() + 40 * 1000).toISOString();
     const { error } = await supabase.from("properties").update({
-      status: "live", auction_date: new Date().toISOString(),
-      round_ends_at: ends, is_paused: false, paused_remaining_ms: null, winner_id: null,
+      status: "live",
+      auction_date: new Date().toISOString(),
+      round_ends_at: ends,
+      auction_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      is_paused: false,
+      paused_remaining_ms: null,
+      winner_id: null,
     }).eq("id", p.id);
     if (error) return toast.error(error.message);
     toast.success("Auction is LIVE");
