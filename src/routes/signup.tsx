@@ -15,7 +15,12 @@ const schema = z.object({
   full_name: z.string().trim().min(2, "Full name is required").max(120),
   ic_number: z.string().regex(/^[0-9]{12}$/, "IC must be exactly 12 digits"),
   email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .max(72, "Password is too long")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character (e.g. ! @ # $)"),
   confirm: z.string(),
 }).refine((d) => d.password === d.confirm, {
   message: "Passwords do not match", path: ["confirm"],
