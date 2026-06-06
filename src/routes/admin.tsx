@@ -353,7 +353,9 @@ function NotificationsModal({ propertyId, propertyName, onClose }: { propertyId:
 function StatusBadge({ status, paused }: { status: string; paused: boolean }) {
   const cls = status === "live"
     ? (paused ? "bg-muted text-muted-foreground" : "bg-live text-live-foreground")
-    : (status === "closed" || status === "past") ? "bg-secondary text-secondary-foreground" : "bg-secondary text-secondary-foreground";
+    : status === "closed" ? "bg-primary text-primary-foreground"
+    : status === "past" ? "bg-primary text-primary-foreground"
+    : "bg-secondary text-secondary-foreground";
   const label = status === "live"
     ? (paused ? "LIVE · PAUSED" : "LIVE")
     : status === "past" ? "PAST"
