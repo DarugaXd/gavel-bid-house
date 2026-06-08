@@ -117,7 +117,11 @@ function AuctionRoom() {
   useEffect(() => {
     if (!user || !accepted || whitelisted !== true) return;
     (async () => {
-      await supabase.from("auction_attendees").upsert({ property_id: id, user_id: user.id });
+      await supabase.from("auction_attendees").upsert(
+        { property_id: id, user_id: user.id, joined_at: new Date().toISOString() },
+        { onConflict: "property_id,user_id" }
+      );
+      await supabase.rpc("cleanup_stale_attendees", { p_property_id: id });
       refreshAttendees();
     })();
     const leave = async () => { await supabase.from("auction_attendees").delete().eq("property_id", id).eq("user_id", user.id); };
@@ -225,6 +229,7 @@ function AuctionRoom() {
   // 30-minute hard auto-close
   useEffect(() => {
     if (phase !== "live" || !property?.auction_ends_at) return;
+    if (property.is_paused) return;
     if (now < new Date(property.auction_ends_at).getTime()) return;
     if (closeTriggered.current) return;
     closeTriggered.current = true;
@@ -236,6 +241,24 @@ function AuctionRoom() {
         .eq("status", "live");
     })();
   }, [phase, now, property, id]);
+
+  useEffect(() => {
+    if (property?.name) {
+      document.title = `LIVE: ${property.name} — Property Auction House`;
+    }
+    return () => { document.title = "Property Auction House"; };
+  }, [property?.name]);
+
+  useEffect(() => {
+    if (!user || !accepted || whitelisted !== true) return;
+    const heartbeat = setInterval(async () => {
+      await supabase.from("auction_attendees").upsert(
+        { property_id: id, user_id: user.id, joined_at: new Date().toISOString() },
+        { onConflict: "property_id,user_id" }
+      );
+    }, 5 * 60 * 1000);
+    return () => clearInterval(heartbeat);
+  }, [id, user, accepted, whitelisted]);
 
   async function placeBid() {
     if (!user || !property) return;
