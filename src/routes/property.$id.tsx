@@ -47,6 +47,13 @@ function PropertyDetail() {
     },
   });
 
+  useEffect(() => {
+    if (p?.name) {
+      document.title = `${p.name} — Property Auction House`;
+    }
+    return () => { document.title = "Property Auction House"; };
+  }, [p?.name]);
+
   if (isLoading) return <div className="mx-auto max-w-5xl px-6 py-20 text-muted-foreground">Loading…</div>;
   if (!p) return <div className="mx-auto max-w-5xl px-6 py-20">Property not found.</div>;
 
