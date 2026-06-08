@@ -335,6 +335,10 @@ export type Database = {
       }
     }
     Functions: {
+      cleanup_stale_attendees: {
+        Args: { p_property_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
