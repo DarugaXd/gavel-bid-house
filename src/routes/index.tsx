@@ -93,7 +93,7 @@ function HomePage() {
             <dl className="mt-12 grid grid-cols-3 gap-8 border-t border-border pt-8 max-w-xl">
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Active Lots")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{activeLotsCount}</dd></div>
               <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Categories")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">7</dd></div>
-              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Live Now")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{liveSoon.length}</dd></div>
+              <div><dt className="text-xs uppercase tracking-wider text-muted-foreground">{t("Live Now")}</dt><dd className="mt-1 font-display text-3xl font-bold text-primary">{properties.filter((p) => p.status === "live").length}</dd></div>
             </dl>
           </div>
         </div>
@@ -216,7 +216,7 @@ function PropertyCard({ p, live = false }: { p: Property; live?: boolean }) {
   }, [live]);
   const startsIn = new Date(p.auction_date).getTime() - now;
   const started = startsIn <= 0;
-  const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url);
+  const cover = (p.images && p.images.length > 0 ? p.images[0] : p.image_url) || "https://placehold.co/400x300/e8dcc8/3d2c1a?text=No+Image";
   const t = useT();
 
   const showLiveNow = p.status === "live";
@@ -286,6 +286,13 @@ function CardStatusPill({ status }: { status: string }) {
     return (
       <span className="absolute top-2 left-2 rounded-md bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shadow-sm">
         Closed
+      </span>
+    );
+  }
+  if (status === "past") {
+    return (
+      <span className="absolute top-2 left-2 rounded-md bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shadow-sm">
+        Past
       </span>
     );
   }

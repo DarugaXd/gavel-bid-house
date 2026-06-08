@@ -51,7 +51,7 @@ function PropertyDetail() {
   if (!p) return <div className="mx-auto max-w-5xl px-6 py-20">Property not found.</div>;
 
   const startsIn = new Date(p.auction_date).getTime() - Date.now();
-  const liveSoon = startsIn < 2 * 60 * 60 * 1000;
+  const liveSoon = p.status === "live" || startsIn < 2 * 60 * 60 * 1000;
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -79,7 +79,7 @@ function PropertyDetail() {
             <div className="text-lg font-semibold">{formatRM(p.bid_increment)}</div>
           </div>
 
-          {p.status === "upcoming" && (
+          {p.status === "upcoming" && !liveSoon && (
             <div className="mt-3">
               <NotifyMeButton propertyId={p.id} size="md" />
             </div>
