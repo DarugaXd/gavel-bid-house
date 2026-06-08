@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatRM, formatDateTime } from "@/lib/format";
 import { ImageCarousel } from "@/components/ImageCarousel";
@@ -46,6 +46,13 @@ function PropertyDetail() {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (p?.name) {
+      document.title = `${p.name} — Property Auction House`;
+    }
+    return () => { document.title = "Property Auction House"; };
+  }, [p?.name]);
 
   if (isLoading) return <div className="mx-auto max-w-5xl px-6 py-20 text-muted-foreground">Loading…</div>;
   if (!p) return <div className="mx-auto max-w-5xl px-6 py-20">Property not found.</div>;

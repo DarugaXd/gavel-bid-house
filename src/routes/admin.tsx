@@ -30,7 +30,7 @@ type Property = {
   round_seconds: number;
   proclamation_pdf_url: string | null;
   condition_pdf_url: string | null;
-  
+  auction_ends_at: string | null;
 };
 
 type Contact = {
@@ -230,7 +230,7 @@ function PropertyRow({ p, editing, onEdit, onClose, onChange, onOpenBidding }: {
   const { data: notifCount = 0 } = useQuery({
     queryKey: ["notif-count", p.id],
     queryFn: async () => {
-      const { count } = await (supabase.from as any)("property_notifications")
+      const { count } = await supabase.from("property_notifications")
         .select("id", { count: "exact", head: true })
         .eq("property_id", p.id);
       return count ?? 0;
@@ -311,7 +311,7 @@ function NotificationsModal({ propertyId, propertyName, onClose }: { propertyId:
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["notifs", propertyId],
     queryFn: async () => {
-      const { data, error } = await (supabase.from as any)("property_notifications")
+      const { data, error } = await supabase.from("property_notifications")
         .select("email, created_at")
         .eq("property_id", propertyId)
         .order("created_at", { ascending: false });
@@ -441,8 +441,12 @@ function LiveControls({ p, onChange }: { p: Property; onChange: () => void }) {
   async function togglePause() {
     if (p.is_paused) {
       const ends = new Date(Date.now() + (p.paused_remaining_ms ?? 40 * 1000)).toISOString();
+      const extendedAuctionEnds = p.auction_ends_at && p.paused_remaining_ms
+        ? new Date(new Date(p.auction_ends_at).getTime() + p.paused_remaining_ms).toISOString()
+        : p.auction_ends_at;
       const { error } = await supabase.from("properties").update({
         is_paused: false, round_ends_at: ends, paused_remaining_ms: null,
+        auction_ends_at: extendedAuctionEnds,
       }).eq("id", p.id);
       if (error) return toast.error(error.message);
       toast.success("Auction resumed");
