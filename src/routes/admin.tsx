@@ -591,21 +591,27 @@ function WhitelistEditor({ p, onChange }: { p: Property; onChange: () => void })
       </div>
 
       <div className="mt-5 flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value.replace(/[^0-9]/g, "").slice(0, 12))}
-          inputMode="numeric"
-          placeholder="12-digit IC (no dashes)"
-          maxLength={12}
-          className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm tracking-wider"
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addIc(); } }}
-          disabled={busy}
-        />
+        <div className="flex-1">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value.replace(/[^0-9]/g, "").slice(0, 12))}
+            inputMode="numeric"
+            placeholder="12-digit IC (no dashes)"
+            maxLength={12}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm tracking-wider"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addIc(); } }}
+            disabled={busy}
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">
+            {input.length}/12 digits
+            {input.length === 12 ? <span className="ml-2 text-emerald-600 font-medium">✓ Valid</span> : null}
+          </span>
+        </div>
         <button
           onClick={addIc}
           type="button"
           disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 self-start"
         >
           <UserPlus className="h-4 w-4" /> Add IC
         </button>
