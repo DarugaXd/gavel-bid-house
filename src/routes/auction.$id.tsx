@@ -526,13 +526,13 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
     case "active":
       return { label: "Active Bidding — Accepting Bids", boxClass: "border-primary/30 bg-card", textClass: "text-primary" };
     case "once":
-      return { label: "Calling Once…", boxClass: "border-gold/60 bg-gold/10", textClass: "text-primary" };
+      return { label: "Calling Once", boxClass: "border-gold/60 bg-gold/10", textClass: "text-primary" };
     case "twice":
-      return { label: "Calling Twice…", boxClass: "border-gold/80 bg-gold/15", textClass: "text-primary" };
+      return { label: "Calling Twice", boxClass: "border-gold/80 bg-gold/15", textClass: "text-primary" };
     case "final":
-      return { label: "Final Call…", boxClass: "border-live bg-live/10 animate-pulse", textClass: "text-live" };
+      return { label: "Final Call", boxClass: "border-live bg-live/10 animate-pulse", textClass: "text-live" };
     case "sold":
-      return { label: "SOLD!", boxClass: "border-live bg-live/20", textClass: "text-live" };
+      return { label: "SOLD", boxClass: "border-live bg-live/20", textClass: "text-live" };
   }
 }
 
