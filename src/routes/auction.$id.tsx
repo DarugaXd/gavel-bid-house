@@ -368,7 +368,7 @@ function AuctionRoom() {
                 <div className="flex-1 text-center">
                   <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Auctioneer's Call</div>
                   <div className={"mt-2 font-display text-5xl font-bold " + banner.textClass}>
-                    {banner.label}
+                    {t(banner.label)}
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
                     {callPhase === "active"
