@@ -484,7 +484,7 @@ function BidHistoryPanel({ bids, now, currentUserId }: { bids: BidRow[]; now: nu
               const isYou = label === "You";
               return (
                 <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                  <span className={"truncate font-medium " + (isYou ? "text-gold" : "text-primary")}>{label}</span>
+                  <span className={"truncate font-medium " + (isYou ? "text-primary font-semibold" : "text-primary")}>{label}</span>
                   <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
                   <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
                 </li>
