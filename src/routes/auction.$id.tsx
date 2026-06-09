@@ -267,7 +267,18 @@ function AuctionRoom() {
     setPlacing(false);
     if (error) return toast.error(error.message);
     const res = data as { success: boolean; amount?: number; error?: string };
-    if (!res?.success) return toast.error(res?.error ?? "Bid was not accepted");
+    if (!res?.success) {
+      const errorMap: Record<string, string> = {
+        "Auction is not live": t("Auction is not live"),
+        "Auction is paused": t("Auction is paused"),
+        "You are already the highest bidder": t("You are already the highest bidder"),
+        "You are not registered for this auction": t("You are not registered for this auction"),
+        "Please wait before placing another bid": t("Please wait before placing another bid"),
+        "Auction time has expired": t("Auction time has expired"),
+      };
+      const displayError = res?.error ? (errorMap[res.error] ?? res.error) : "Bid was not accepted";
+      return toast.error(displayError);
+    }
     toast.success(`Bid placed: ${formatRM(res.amount ?? 0)}`);
     loadBids();
   }
