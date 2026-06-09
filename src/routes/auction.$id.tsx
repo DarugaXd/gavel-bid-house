@@ -267,7 +267,18 @@ function AuctionRoom() {
     setPlacing(false);
     if (error) return toast.error(error.message);
     const res = data as { success: boolean; amount?: number; error?: string };
-    if (!res?.success) return toast.error(res?.error ?? "Bid was not accepted");
+    if (!res?.success) {
+      const errorMap: Record<string, string> = {
+        "Auction is not live": t("Auction is not live"),
+        "Auction is paused": t("Auction is paused"),
+        "You are already the highest bidder": t("You are already the highest bidder"),
+        "You are not registered for this auction": t("You are not registered for this auction"),
+        "Please wait before placing another bid": t("Please wait before placing another bid"),
+        "Auction time has expired": t("Auction time has expired"),
+      };
+      const displayError = res?.error ? (errorMap[res.error] ?? res.error) : "Bid was not accepted";
+      return toast.error(displayError);
+    }
     toast.success(`Bid placed: ${formatRM(res.amount ?? 0)}`);
     loadBids();
   }
@@ -357,7 +368,7 @@ function AuctionRoom() {
                 <div className="flex-1 text-center">
                   <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Auctioneer's Call</div>
                   <div className={"mt-2 font-display text-5xl font-bold " + banner.textClass}>
-                    {banner.label}
+                    {t(banner.label)}
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
                     {callPhase === "active"
@@ -473,7 +484,7 @@ function BidHistoryPanel({ bids, now, currentUserId }: { bids: BidRow[]; now: nu
               const isYou = label === "You";
               return (
                 <li key={b.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-                  <span className={"truncate font-medium " + (isYou ? "text-gold" : "text-primary")}>{label}</span>
+                  <span className={"truncate font-medium " + (isYou ? "text-primary font-semibold" : "text-primary")}>{label}</span>
                   <span className="font-display font-semibold text-primary tabular-nums">{formatRM(b.amount)}</span>
                   <span className="w-20 shrink-0 text-right text-[11px] text-muted-foreground">{timeAgo(b.created_at, now)}</span>
                 </li>
@@ -515,13 +526,13 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
     case "active":
       return { label: "Active Bidding — Accepting Bids", boxClass: "border-primary/30 bg-card", textClass: "text-primary" };
     case "once":
-      return { label: "Calling Once…", boxClass: "border-gold/60 bg-gold/10", textClass: "text-primary" };
+      return { label: "Calling Once", boxClass: "border-gold/60 bg-gold/10", textClass: "text-primary" };
     case "twice":
-      return { label: "Calling Twice…", boxClass: "border-gold/80 bg-gold/15", textClass: "text-primary" };
+      return { label: "Calling Twice", boxClass: "border-gold/80 bg-gold/15", textClass: "text-primary" };
     case "final":
-      return { label: "Final Call…", boxClass: "border-live bg-live/10 animate-pulse", textClass: "text-live" };
+      return { label: "Final Call", boxClass: "border-live bg-live/10 animate-pulse", textClass: "text-live" };
     case "sold":
-      return { label: "SOLD!", boxClass: "border-live bg-live/20", textClass: "text-live" };
+      return { label: "SOLD", boxClass: "border-live bg-live/20", textClass: "text-live" };
   }
 }
 

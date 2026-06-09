@@ -54,6 +54,19 @@ const STRINGS: Record<string, { en: string; bm: string }> = {
     en: "No live or imminent auctions right now — check back soon.",
     bm: "Tiada lelongan langsung atau hampir bermula sekarang — semak semula tidak lama lagi.",
   },
+  "Auction is not live": { en: "Auction is not live", bm: "Lelongan tidak aktif" },
+  "Auction is paused": { en: "Auction is paused", bm: "Lelongan dijeda" },
+  "You are already the highest bidder": { en: "You are already the highest bidder", bm: "Anda sudah penawar tertinggi" },
+  "You are not registered for this auction": { en: "You are not registered for this auction", bm: "Anda tidak berdaftar untuk lelongan ini" },
+  "Please wait before placing another bid": { en: "Please wait before placing another bid", bm: "Sila tunggu sebelum membida semula" },
+  "Auction time has expired": { en: "Auction time has expired", bm: "Masa lelongan telah tamat" },
+  "SOLD": { en: "SOLD", bm: "DIJUAL" },
+  "Calling Once": { en: "Calling Once", bm: "Sekali" },
+  "Calling Twice": { en: "Calling Twice", bm: "Dua Kali" },
+  "Final Call": { en: "Final Call", bm: "Panggilan Terakhir" },
+  "Going once": { en: "Going once", bm: "Sekali" },
+  "Going twice": { en: "Going twice", bm: "Dua kali" },
+  "Sold to the highest bidder": { en: "Sold to the highest bidder", bm: "Dijual kepada penawar tertinggi" },
 };
 
 interface Ctx { lang: Lang; toggle: () => void; t: (k: string) => string; }
