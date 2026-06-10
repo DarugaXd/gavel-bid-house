@@ -64,9 +64,19 @@ const STRINGS: Record<string, { en: string; bm: string }> = {
   "Calling Once": { en: "Calling Once", bm: "Sekali" },
   "Calling Twice": { en: "Calling Twice", bm: "Dua Kali" },
   "Final Call": { en: "Final Call", bm: "Panggilan Terakhir" },
-  "Going once": { en: "Going once", bm: "Sekali" },
-  "Going twice": { en: "Going twice", bm: "Dua kali" },
-  "Sold to the highest bidder": { en: "Sold to the highest bidder", bm: "Dijual kepada penawar tertinggi" },
+  "Active Bidding — Accepting Bids": { en: "Active Bidding — Accepting Bids", bm: "Bidaan Aktif — Menerima Bida" },
+  "Auction Concluded — No Bids Placed": { en: "Auction Concluded — No Bids Placed", bm: "Lelongan Tamat — Tiada Bida Diterima" },
+  "Your winning bid": { en: "Your winning bid", bm: "Bida menang anda" },
+  "You have been identified as the successful bidder for this property. Please contact our auctioneer or appointed lawyer immediately to proceed with the next steps.": {
+    en: "You have been identified as the successful bidder for this property. Please contact our auctioneer or appointed lawyer immediately to proceed with the next steps.",
+    bm: "Anda telah dikenal pasti sebagai penawar berjaya untuk hartanah ini. Sila hubungi jurulelong atau peguam kami dengan segera untuk meneruskan langkah seterusnya.",
+  },
+  "The auction for this property has concluded. We appreciate your participation. For enquiries regarding this or future auctions, please contact our auctioneer or appointed lawyer.": {
+    en: "The auction for this property has concluded. We appreciate your participation. For enquiries regarding this or future auctions, please contact our auctioneer or appointed lawyer.",
+    bm: "Lelongan untuk hartanah ini telah tamat. Kami menghargai penyertaan anda. Untuk pertanyaan mengenai lelongan ini atau akan datang, sila hubungi jurulelong atau peguam kami.",
+  },
+  "bidder in the room": { en: "bidder in the room", bm: "penawar dalam bilik" },
+  "bidders in the room": { en: "bidders in the room", bm: "penawar dalam bilik" },
 };
 
 interface Ctx { lang: Lang; toggle: () => void; t: (k: string) => string; }
