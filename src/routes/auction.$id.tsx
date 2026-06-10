@@ -395,7 +395,7 @@ function AuctionRoom() {
           <div className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-sm">
             <Users className="h-4 w-4 text-primary" />
             <span className="font-medium">{attendees}</span>
-            <span className="text-muted-foreground">{attendees === 1 ? "bidder" : "bidders"} in the room</span>
+            <span className="text-muted-foreground">{attendees === 1 ? t("bidder in the room") : t("bidders in the room")}</span>
           </div>
 
           {phase === "pre" && <PreAuction startMs={startMs} now={now} />}
@@ -432,6 +432,7 @@ function AuctionRoom() {
               currentBid={currentBid}
               isWinner={!!property.winner_id && property.winner_id === user?.id}
               hasWinner={!!property.winner_id}
+              t={t}
             />
           )}
 
@@ -536,14 +537,14 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
   }
 }
 
-function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; isWinner: boolean; hasWinner: boolean }) {
+function ClosedPanel({ currentBid, isWinner, hasWinner, t }: { currentBid: number; isWinner: boolean; hasWinner: boolean; t: (k: string) => string }) {
   // STATE C — no bids placed
   if (!hasWinner) {
     return (
       <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
         <Gavel className="mx-auto h-10 w-10 text-primary" />
         <div className="mt-3 font-display text-xl font-bold text-primary">
-          Auction Concluded — No Bids Placed
+          {t("Auction Concluded — No Bids Placed")}
         </div>
       </div>
     );
@@ -554,19 +555,18 @@ function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; 
       <div className="rounded-lg border-2 border-gold bg-gold/15 p-6 text-center">
         <Trophy className="mx-auto h-12 w-12 text-gold" />
         <h2 className="mt-3 font-display text-xl font-bold text-primary">
-          Congratulations — You are the Successful Bidder
+          {t("Congratulations — You are the Successful Bidder")}
         </h2>
-        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">Your winning bid</div>
+        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">{t("Your winning bid")}</div>
         <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
         <p className="mt-4 text-sm text-foreground/90">
-          You have been identified as the successful bidder for this property. Please contact our
-          auctioneer or appointed lawyer immediately to proceed with the next steps.
+          {t("You have been identified as the successful bidder for this property. Please contact our auctioneer or appointed lawyer immediately to proceed with the next steps.")}
         </p>
         <a
           href="/#contact"
           className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
         >
-          View Contact Details
+          {t("View Contact Details")}
         </a>
       </div>
     );
@@ -576,24 +576,23 @@ function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; 
     <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
       <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
       <h2 className="mt-3 font-display text-xl font-bold text-primary">
-        Thank You for Participating
+        {t("Thank You for Participating")}
       </h2>
       <p className="mt-3 text-sm text-foreground/90">
-        The auction for this property has concluded. We appreciate your participation. For
-        enquiries regarding this or future auctions, please contact our auctioneer or appointed
-        lawyer.
+        {t("The auction for this property has concluded. We appreciate your participation. For enquiries regarding this or future auctions, please contact our auctioneer or appointed lawyer.")}
       </p>
       <a
         href="/#contact"
         className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
       >
-        View Contact Details
+        {t("View Contact Details")}
       </a>
     </div>
   );
 }
 
 function PreAuction({ startMs, now }: { startMs: number; now: number }) {
+  const t = useT();
   const ms = Math.max(0, startMs - now);
   const total = Math.floor(ms / 1000);
   const d = Math.floor(total / 86400);
@@ -603,9 +602,9 @@ function PreAuction({ startMs, now }: { startMs: number; now: number }) {
 
   return (
     <div className="rounded-lg border-2 border-primary/20 bg-card p-6">
-      <div className="text-center text-xs uppercase tracking-[0.22em] text-muted-foreground">Auction Begins In</div>
+      <div className="text-center text-xs uppercase tracking-[0.22em] text-muted-foreground">{t("Auction Begins In")}</div>
       <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-        {[["Days", d], ["Hrs", h], ["Min", m], ["Sec", sec]].map(([label, val]) => (
+        {[[t("Days"), d], [t("Hrs"), h], [t("Min"), m], [t("Sec"), sec]].map(([label, val]) => (
           <div key={label as string} className="rounded-md bg-secondary px-2 py-3">
             <div className="font-display text-3xl font-bold text-primary tabular-nums">{String(val).padStart(2, "0")}</div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
