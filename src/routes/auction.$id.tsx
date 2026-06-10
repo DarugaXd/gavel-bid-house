@@ -592,6 +592,7 @@ function ClosedPanel({ currentBid, isWinner, hasWinner, t }: { currentBid: numbe
 }
 
 function PreAuction({ startMs, now }: { startMs: number; now: number }) {
+  const t = useT();
   const ms = Math.max(0, startMs - now);
   const total = Math.floor(ms / 1000);
   const d = Math.floor(total / 86400);
@@ -601,9 +602,9 @@ function PreAuction({ startMs, now }: { startMs: number; now: number }) {
 
   return (
     <div className="rounded-lg border-2 border-primary/20 bg-card p-6">
-      <div className="text-center text-xs uppercase tracking-[0.22em] text-muted-foreground">Auction Begins In</div>
+      <div className="text-center text-xs uppercase tracking-[0.22em] text-muted-foreground">{t("Auction Begins In")}</div>
       <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-        {[["Days", d], ["Hrs", h], ["Min", m], ["Sec", sec]].map(([label, val]) => (
+        {[[t("Days"), d], [t("Hrs"), h], [t("Min"), m], [t("Sec"), sec]].map(([label, val]) => (
           <div key={label as string} className="rounded-md bg-secondary px-2 py-3">
             <div className="font-display text-3xl font-bold text-primary tabular-nums">{String(val).padStart(2, "0")}</div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
