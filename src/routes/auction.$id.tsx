@@ -395,7 +395,7 @@ function AuctionRoom() {
           <div className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-sm">
             <Users className="h-4 w-4 text-primary" />
             <span className="font-medium">{attendees}</span>
-            <span className="text-muted-foreground">{attendees === 1 ? "bidder" : "bidders"} in the room</span>
+            <span className="text-muted-foreground">{attendees === 1 ? t("bidder in the room") : t("bidders in the room")}</span>
           </div>
 
           {phase === "pre" && <PreAuction startMs={startMs} now={now} />}
