@@ -432,6 +432,7 @@ function AuctionRoom() {
               currentBid={currentBid}
               isWinner={!!property.winner_id && property.winner_id === user?.id}
               hasWinner={!!property.winner_id}
+              t={t}
             />
           )}
 
