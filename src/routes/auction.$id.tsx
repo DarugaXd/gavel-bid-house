@@ -537,14 +537,14 @@ function bannerForPhase(phase: string, c: "active" | "once" | "twice" | "final" 
   }
 }
 
-function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; isWinner: boolean; hasWinner: boolean }) {
+function ClosedPanel({ currentBid, isWinner, hasWinner, t }: { currentBid: number; isWinner: boolean; hasWinner: boolean; t: (k: string) => string }) {
   // STATE C — no bids placed
   if (!hasWinner) {
     return (
       <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
         <Gavel className="mx-auto h-10 w-10 text-primary" />
         <div className="mt-3 font-display text-xl font-bold text-primary">
-          Auction Concluded — No Bids Placed
+          {t("Auction Concluded — No Bids Placed")}
         </div>
       </div>
     );
@@ -555,19 +555,18 @@ function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; 
       <div className="rounded-lg border-2 border-gold bg-gold/15 p-6 text-center">
         <Trophy className="mx-auto h-12 w-12 text-gold" />
         <h2 className="mt-3 font-display text-xl font-bold text-primary">
-          Congratulations — You are the Successful Bidder
+          {t("Congratulations — You are the Successful Bidder")}
         </h2>
-        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">Your winning bid</div>
+        <div className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">{t("Your winning bid")}</div>
         <div className="mt-1 font-display text-4xl font-bold text-primary">{formatRM(currentBid)}</div>
         <p className="mt-4 text-sm text-foreground/90">
-          You have been identified as the successful bidder for this property. Please contact our
-          auctioneer or appointed lawyer immediately to proceed with the next steps.
+          {t("You have been identified as the successful bidder for this property. Please contact our auctioneer or appointed lawyer immediately to proceed with the next steps.")}
         </p>
         <a
           href="/#contact"
           className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
         >
-          View Contact Details
+          {t("View Contact Details")}
         </a>
       </div>
     );
@@ -577,18 +576,16 @@ function ClosedPanel({ currentBid, isWinner, hasWinner }: { currentBid: number; 
     <div className="rounded-lg border-2 border-primary/30 bg-card p-6 text-center">
       <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
       <h2 className="mt-3 font-display text-xl font-bold text-primary">
-        Thank You for Participating
+        {t("Thank You for Participating")}
       </h2>
       <p className="mt-3 text-sm text-foreground/90">
-        The auction for this property has concluded. We appreciate your participation. For
-        enquiries regarding this or future auctions, please contact our auctioneer or appointed
-        lawyer.
+        {t("The auction for this property has concluded. We appreciate your participation. For enquiries regarding this or future auctions, please contact our auctioneer or appointed lawyer.")}
       </p>
       <a
         href="/#contact"
         className="mt-5 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
       >
-        View Contact Details
+        {t("View Contact Details")}
       </a>
     </div>
   );
